@@ -4,16 +4,18 @@
     by lipeeeee
 """
 
-import chess as chess
+from luna_board import LunaBoard
+from luna import Luna
 import sys
 
 def main() -> int:
     """Entry Point"""
-    board = chess.Board()
+    luna_chess = Luna()
+    board = luna_chess.board
     moves = board.generate_legal_moves()
     for move in moves:
         print(move)
-    
+
     return 0
 
 
