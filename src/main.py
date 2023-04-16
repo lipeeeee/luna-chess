@@ -9,7 +9,11 @@ import sys
 
 def main() -> int:
     """Entry Point"""
-
+    board = chess.Board()
+    moves = board.generate_legal_moves()
+    for move in moves:
+        print(move)
+    
     return 0
 
 

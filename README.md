@@ -7,4 +7,4 @@ Zero knowledge chess engine:
 
 - Figure out what neural net approach is best
 
-- Pygame for UI
+- Pygame for UI / html/js may be better
