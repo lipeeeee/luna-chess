@@ -12,9 +12,28 @@
 
 # Luna-Chess
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>X</b>, I built it with little to no knowledge about the backend of chess engines(CE), I conceptualized it by reading about Reinforcement Learning and Deep Learning and it's applicability to chess.
+<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, I built it with little to no knowledge about the backend of chess engines(CE), I conceptualized it by reading about Reinforcement Learning and Deep Learning and it's applicability to chess.
 
 <p>
 
 Ultimately i chose a <b>Deep Neural Network</b> approach since reinforcement learning would be much more computationaly expensive and also a neural network would adapt much better to new states since it could detect patterns with ease such as <i>zugzwang</i> and <i> perpetual checks</i>.
 <p>
+
+## Architecture
+```python
+optimizer = 'adam'
+loss = 'mean_squared_error'
+N = 864
+input_shape = (8, 8, 12)
+
+model = keras.models.Sequential([
+    layers.Conv2D(64, 3, activation='relu', input_shape=input_shape),
+    layers.Conv2D(64, 3, activation='relu'),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(1, activation='linear')
+])
+
+model.compile(optimizer=optimizer, loss=loss)
+```
