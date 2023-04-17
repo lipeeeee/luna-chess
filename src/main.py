@@ -10,11 +10,7 @@ import sys
 
 def main() -> int:
     """Entry Point"""
-    luna_chess = Luna()
-    board = luna_chess.board
-    moves = board.generate_legal_moves()
-    for move in moves:
-        print(move)
+    luna_chess = Luna(verbose=True)
 
     return 0
 
