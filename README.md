@@ -1,10 +1,20 @@
+<div align="center">
 
-# Luna Chess
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Keras](https://img.shields.io/badge/Keras-%23D00000.svg?style=for-the-badge&logo=Keras&logoColor=white)
+![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![pytorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
+![tensorflow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
+<!-- [![Windows](https://img.shields.io/badge/Platform-Windows-0078d7.svg?style=for-the-badge)](https://en.wikipedia.org/wiki/Microsoft_Windows) -->
+<!-- [![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)](LICENSE) -->
 
-Zero knowledge chess engine:
+# Luna-Chess
+</div>
+<b>Luna-Chess</b> is a chess engine rated around <b>X</b>, I built it with little to no knowledge about the backend of chess engines(CE), I conceptualized it by reading about Reinforcement Learning and Deep Learning and it's applicability to chess.
 
-- using python-chess uci cuz we don't wanna reinvent the wheel
+<p>
 
-- Figure out what neural net approach is best
-
-- Pygame for UI / html/js may be better
+Ultimately i chose a <b>Deep Neural Network</b> approach since reinforcement learning would be much more computationaly expensive and also a neural network would adapt much better to new states since it could detect patterns with ease such as <i>zugzwang</i> and <i> perpetual checks</i>.
+<p>
