@@ -4,11 +4,9 @@
 
 import os
 import numpy as np
-import keras as keras
 import chess.pgn 
-from luna_board import LunaBoard
-from keras import layers
-from keras.models import load_model
+import torch
+from luna import luNNa
 
 # CHANGE THIS IF WANTING TO TRAIN A NEW MODEL OR JUST USE ANOTHER ONE
 MODEL_TO_USE = "models/main_luna.h5"
@@ -18,13 +16,13 @@ class Luna():
 
     def __init__(self, verbose=False) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
-        self.board = LunaBoard()
         self.verbose = verbose
-
+        self.luNNa = luNNa()
+        
         # Check if model exists
         if self.model_exists():
             if verbose: print(f"[BUILDING] Loading model({MODEL_TO_USE})...")
-            self.model = load_model(MODEL_TO_USE)
+            # self.model = load_model(MODEL_TO_USE)
             return
         
         # define model
@@ -36,30 +34,6 @@ class Luna():
 
         # training model
         self.train()
-
-    def define(self, input_shape) -> None:
-        """Define neural net"""
-        self.optimizer = 'adam'
-        self.loss = 'mean_squared_error'
-        
-        self.model = keras.models.Sequential([
-            layers.Dense(512, activation='relu', input_shape=input_shape),
-            layers.Dropout(0.2),
-            layers.Dense(256, activation='relu'),
-            layers.Dropout(0.2),
-            layers.Dense(128, activation='relu'),
-            layers.Dropout(0.2),
-            layers.Dense(1, activation='linear')
-        ])
-
-        self.model.compile(optimizer=self.optimizer, loss=self.loss)
-
-    def train(self, N=0) -> None:
-        """Train Luna on a pgn file directory(on N games)"""
-        assert not self.model_exists()
-    
-        return
-
 
     def old_train(self) -> None:
         """Train Luna with a pgn file directory
@@ -121,7 +95,15 @@ class Luna():
             3. Pawn structure
             4. Move count
         """
-        board = game.board()
+
+        return
+
+    def serialize_board(self, board: chess.Board):
+        """Serialize a chess board into a NN readable format
+            1. Encode board
+            2. Encode board into binary representation(4bit)
+            3. Encode turn
+        """
         
         # Check if valid board before preprocessing
         assert board.is_valid()

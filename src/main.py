@@ -4,14 +4,12 @@
     by lipeeeee
 """
 
-from luna_board import LunaBoard
 from luna import Luna
 import sys
 
 def main() -> int:
     """Entry Point"""
     luna_chess = Luna(verbose=True)
-
     return 0
 
 
