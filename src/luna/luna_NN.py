@@ -16,15 +16,16 @@ MODEL_FOLDER = "networks"
 class LunaNN(nn.Module):
     """Pytorch Neural Network"""
 
-    def __init__(self, model_file=CURRENT_MODEL, cuda=True, verbose=False, epochs=100) -> None:
+    def __init__(self, model_file=CURRENT_MODEL, cuda=True, verbose=False, epochs=100, save_after_each_epoch=False) -> None:
         # Neural Net definition
-        if verbose: print(f"[NEURAL NET] Defining neural network...")
+        if verbose: print(f"[NEURAL NET] Initializing neural network...")
         super(LunaNN, self).__init__()
         self.define()
         self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.loss = nn.MSELoss()
         self.epochs = epochs
+        self.save_after_each_epoch = save_after_each_epoch
         if cuda:
             self.cuda()
 
@@ -42,7 +43,7 @@ class LunaNN(nn.Module):
             self.load()
         else:
             if verbose: print(f"[NEURAL NET] NO EXISTING NEURAL NET, Training new neural network...")
-            self._train(epochs=self.epochs, save_after_each_epoch=True)
+            self._train(epochs=self.epochs, save_after_each_epoch=self.save_after_each_epoch)
 
             if verbose: print(f"[NEURAL NET] FINISHED TRAINING, SAVING...")
             self.save()

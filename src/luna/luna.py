@@ -13,16 +13,7 @@ class Luna():
     def __init__(self, verbose=False) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
         self.verbose = verbose
-        self.luNNa = LunaNN()
-        
-        # Check if model exists
-        if self.luNNa.model_exists():
-            if verbose: print(f"[BUILDING] Loading model({self.luNNa.model_file})...")
-            self.luNNa.load()
-            return
-        
-        # define model
-        if verbose: print(f"[BUILDING] No model found, defining model...")
+        self.luNNa = LunaNN(cuda=True, verbose=verbose, epochs=100, save_after_each_epoch=True)
 
         # training model
         self.train()
