@@ -6,10 +6,7 @@ import os
 import numpy as np
 import chess.pgn 
 import torch
-from luna import luNNa
-
-# CHANGE THIS IF WANTING TO TRAIN A NEW MODEL OR JUST USE ANOTHER ONE
-MODEL_TO_USE = "models/main_luna.h5"
+from luna import LunaDataset, LunaNN, LUNA_MAIN_FOLDER, CURRENT_MODEL
 
 class Luna():
     """Luna_chess engine main class"""
@@ -17,20 +14,17 @@ class Luna():
     def __init__(self, verbose=False) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
         self.verbose = verbose
-        self.luNNa = luNNa()
+        self.luna_dataset = LunaDataset(num_samples=250_000_000, verbose=verbose)
+        self.luNNa = LunaNN(model_file=CURRENT_MODEL)
         
         # Check if model exists
-        if self.model_exists():
-            if verbose: print(f"[BUILDING] Loading model({MODEL_TO_USE})...")
-            # self.model = load_model(MODEL_TO_USE)
+        if self.luNNa.model_exists():
+            if verbose: print(f"[BUILDING] Loading model({CURRENT_MODEL})...")
+            self.luNNa.load()
             return
         
         # define model
         if verbose: print(f"[BUILDING] No model found, defining model...")
-        # self.define(input_shape=0)
-
-        # Main database folder(D:\dev\datasets_databases)
-        self.training_folder = os.path.join("D:\\", "dev", "datasets_databases")
 
         # training model
         self.train()
@@ -89,7 +83,7 @@ class Luna():
 
     def preprocess_game(self, game: chess.pgn.Game):
         """Preprocess game into a vector with:
-            0. Moves??
+            0. Moves?
             1. Board State(8, 8)
             2. Result
             3. Pawn structure
@@ -98,7 +92,8 @@ class Luna():
 
         return
 
-    def serialize_board(self, board: chess.Board):
+    @staticmethod
+    def serialize_board(board: chess.Board):
         """Serialize a chess board into a NN readable format
             1. Encode board
             2. Encode board into binary representation(4bit)
@@ -197,11 +192,3 @@ class Luna():
         Y = np.zeros((len(X_moves), 1))
         
         return X, Y
-
-    def save(self) -> None:
-        """Save trained model"""
-        ...
-
-    def model_exists(self) -> bool:
-        """Checks if there is a pre-saved model"""
-        return os.path.exists(MODEL_TO_USE)

@@ -1,6 +1,8 @@
 # should we import databases?
 data/
 data/*
+processed/
+processed/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
