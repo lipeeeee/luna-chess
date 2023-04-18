@@ -38,7 +38,7 @@ class LunaDataset(Dataset):
     def __getitem__(self, index):
         return (self.X[index], self.Y[index])
 
-    def serialize_board(board: chess.Board):
+    def serialize_board(self, board: chess.Board):
         """Serialize a chess board into a NN readable format
             1. Encode board
             2. Encode board into binary representation(4bit)
@@ -58,7 +58,7 @@ class LunaDataset(Dataset):
             board_state[i] = {"P": 1, "N": 2, "B": 3, "R": 4, "Q": 5, "K": 6, \
                     "p": 9, "n":10, "b":11, "r":12, "q":13, "k": 14}[pp.symbol()]
         
-        board_state.reshape(8, 8)
+        board_state = board_state.reshape(8, 8)
 
         # 2. Binary state
         state = np.zeros((5, 8, 8), np.uint8)
@@ -84,7 +84,6 @@ class LunaDataset(Dataset):
 
     def save(self) -> None:
         """Save dataset"""
-        assert not self.dataset_exists()
         np.savez(self.dataset_full_path, self.X, self.Y)
 
     def generate_dataset(self):
@@ -139,4 +138,4 @@ class LunaDataset(Dataset):
 
     def dataset_exists(self) -> bool:
         """Checks if a dataset with the given number of samples has been found"""
-        return os.path.exists(LUNA_MAIN_FOLDER, DATASET_FOLDER, self.dataset_full_path)
+        return os.path.exists(os.path.join(LUNA_MAIN_FOLDER, DATASET_FOLDER, self.dataset_full_path))

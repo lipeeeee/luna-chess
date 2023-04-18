@@ -3,10 +3,11 @@
 """
 
 import os
-from torch import *
+import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader
 
 from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES
 from .luna_dataset import LunaDataset
@@ -29,8 +30,8 @@ class LunaNN(nn.Module):
 
         # Dataset Initialazation
         if verbose: print(f"[DATASET] Initializing dataset...")
-        self.dataset = LunaDataset(num_samples=NUM_SAMPLES)
-        self.train_loader = torch.utils.data.DataLoader(self.dataset, batch_size=256, shuffle=True)        
+        self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)
+        self.train_loader = DataLoader(self.dataset, batch_size=256, shuffle=True)        
         
         self.model_file = model_file # .pt file(ex: main_luna.pt)
         self.model_path = os.path.join(LUNA_MAIN_FOLDER, MODEL_FOLDER, model_file)
@@ -108,19 +109,17 @@ class LunaNN(nn.Module):
         
         self.train()
 
-        for epoch in range(epochs):
+        for epoch in range(1, epochs):
             all_loss = 0
             num_loss = 0
             for batch_idx, (data, target) in enumerate(self.train_loader):
                 target = target.unsqueeze(-1)
-                data, target = data.to(device), target.to(device)
+                data, target = data.to("cuda"), target.to("cuda")
                 data = data.float()
                 target = target.float()
 
-                #print(data.shape, target.shape)
                 self.optimizer.zero_grad()
                 output = self(data)
-                #print(output.shape)
 
                 loss = self.loss(output, target)
                 loss.backward()
