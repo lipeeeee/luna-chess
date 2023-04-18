@@ -8,7 +8,7 @@
 from luna import LunaNN
 
 MODEL_NAME = "infinite_luna.pth"
-EPOCHS = 10_000_000
+EPOCHS = 20_000_000
 VERBOSE = True
 CUDA = False
 SAVE_AFTER_EACH_EPOCH = True
