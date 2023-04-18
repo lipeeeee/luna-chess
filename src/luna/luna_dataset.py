@@ -1,6 +1,5 @@
 """
-    Pytorch dataset builder for Luna-Chess
-
+    Luna-Chess Pytorch dataset builder
 """
 
 import os

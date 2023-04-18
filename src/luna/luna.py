@@ -1,5 +1,5 @@
 """
-    Luna-Chess
+    Luna-Chess main logic
 """
 
 import os
@@ -14,7 +14,6 @@ class Luna():
     def __init__(self, verbose=False) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
         self.verbose = verbose
-        self.luna_dataset = LunaDataset(num_samples=250_000_000, verbose=verbose)
         self.luNNa = LunaNN(model_file=CURRENT_MODEL)
         
         # Check if model exists
