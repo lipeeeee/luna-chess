@@ -12,3 +12,4 @@ from .luna_dataset import LunaDataset
 from .luna_dataset import DATASET_FOLDER, DATASET_PREFIX 
 from .luna_eval import MAXVAL
 from .luna_NN import MODEL_FOLDER
+from .luna_constants import *

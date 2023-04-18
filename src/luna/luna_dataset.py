@@ -6,7 +6,8 @@ import os
 import chess.pgn
 import numpy as np
 from torch.utils.data import Dataset
-from luna import Luna, LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER
+
+from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER
 
 DATASET_FOLDER = "processed" 
 DATASET_PREFIX = "luna_dataset_" # + number + ".npz"
@@ -36,6 +37,42 @@ class LunaDataset(Dataset):
 
     def __getitem__(self, index):
         return (self.X[index], self.Y[index])
+
+    def serialize_board(board: chess.Board):
+        """Serialize a chess board into a NN readable format
+            1. Encode board
+            2. Encode board into binary representation(4bit)
+            3. Encode turn
+        """
+        
+        # Check if valid board before preprocessing
+        assert board.is_valid()
+
+        # 1. Board state encoding 
+        board_state = np.zeros(64, np.uint8)
+        for i in range(64):
+            pp = board.piece_at(i)
+            
+            if pp is None:
+                continue
+            board_state[i] = {"P": 1, "N": 2, "B": 3, "R": 4, "Q": 5, "K": 6, \
+                    "p": 9, "n":10, "b":11, "r":12, "q":13, "k": 14}[pp.symbol()]
+        
+        board_state.reshape(8, 8)
+
+        # 2. Binary state
+        state = np.zeros((5, 8, 8), np.uint8)
+
+        # 0 - 3 columns to binary
+        state[0] = (board_state>>3)&1
+        state[1] = (board_state>>2)&1
+        state[2] = (board_state>>1)&1
+        state[3] = (board_state>>0)&1
+
+        # 4th column is who's turn it is
+        state[4] = (board.turn*1.0)
+
+        return state
 
     def load(self) -> None:
         """Load dataset from disk"""
@@ -81,7 +118,7 @@ class LunaDataset(Dataset):
                 board = game.board()
                 for i, move in enumerate(game.mainline_moves()):
                     board.push(move)
-                    ser = Luna.serialize_board(board)
+                    ser = self.serialize_board(board)
                     X.append(ser)
                     Y.append(res_value)
                 

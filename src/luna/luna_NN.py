@@ -5,8 +5,11 @@
 import os
 from torch import *
 import torch.nn.functional as F
-from luna import LUNA_MAIN_FOLDER, CURRENT_MODEL
-from luna import LunaDataset, NUM_SAMPLES
+import torch.nn as nn
+import torch.optim as optim
+
+from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES
+from .luna_dataset import LunaDataset
 
 MODEL_FOLDER = "networks"
 class LunaNN(nn.Module):
@@ -20,7 +23,7 @@ class LunaNN(nn.Module):
         self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.loss = nn.MSELoss()
-        self.epochs = self.epochs
+        self.epochs = epochs
         if cuda:
             self.cuda()
 
