@@ -49,7 +49,8 @@ class LunaNN(nn.Module):
 
     def define(self) -> None:
         """Define neural net"""
-        self.a1 = nn.Conv2d(5, 16, kernel_size=3, padding=1)
+        # 5 -> 6
+        self.a1 = nn.Conv2d(6, 16, kernel_size=3, padding=1)
         self.a2 = nn.Conv2d(16, 16, kernel_size=3, padding=1)
         self.a3 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
 
@@ -66,6 +67,28 @@ class LunaNN(nn.Module):
         self.d3 = nn.Conv2d(128, 128, kernel_size=1)
 
         self.last = nn.Linear(128, 1)
+
+    def secondary_define(self) -> None:
+        """Secondary neural network"""
+        # Convolutional layers
+        self.conv1 = nn.Conv2d(in_channels=6, out_channels=64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+
+        # Fully connected layers
+        self.fc1 = nn.Linear(in_features=256 * 8 * 8, out_features=512)
+        self.fc2 = nn.Linear(in_features=512, out_features=1)
+
+    def secondary_forward(self, x):
+        """Secondary forward prop implementation for secondary_deifne"""
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = x.view(-1, 256 * 8 * 8)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
 
     def forward(self, x):
         """Forward prop implementation"""

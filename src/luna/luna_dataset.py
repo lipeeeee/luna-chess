@@ -4,6 +4,7 @@
 
 import os
 import chess.pgn
+from chess import Bitboard
 import numpy as np
 from torch.utils.data import Dataset
 
@@ -44,13 +45,11 @@ class LunaDataset(Dataset):
             2. Encode pawn structure(-1 for black 1 for white 0 for none)
             3. Encode board into binary representation(4bit)
             4. Encode turn
-            TODO. pawn strcuture
         """
         
         # Check if valid board before preprocessing
         assert board.is_valid()
 
-         
         board_state = np.zeros(64, np.uint8)
         pawn_structure = np.zeros(64, np.int8)
         for i in range(64):
@@ -70,17 +69,19 @@ class LunaDataset(Dataset):
         board_state = board_state.reshape(8, 8) 
         pawn_structure = pawn_structure.reshape(8, 8)
 
-        # 3. Binary state
-        state = np.zeros((5, 8, 8), np.uint8)
+        state = np.zeros((6, 8, 8), np.uint8)
 
-        # 0 - 3 columns to binary
-        state[0] = (board_state>>3)&1
-        state[1] = (board_state>>2)&1
-        state[2] = (board_state>>1)&1
-        state[3] = (board_state>>0)&1
+        # 2. Pawn structure
+        state[0] = pawn_structure
 
-        # 4. 4th column is who's turn it is
-        state[4] = (board.turn*1.0)
+        # 3. Binary board state
+        state[1] = (board_state>>3)&1
+        state[2] = (board_state>>2)&1
+        state[3] = (board_state>>1)&1
+        state[4] = (board_state>>0)&1
+
+        # 4. 5th column is who's turn it is
+        state[5] = (board.turn*1.0)
 
         return state
 
