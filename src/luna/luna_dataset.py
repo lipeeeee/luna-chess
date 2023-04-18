@@ -41,26 +41,36 @@ class LunaDataset(Dataset):
     def serialize_board(self, board: chess.Board):
         """Serialize a chess board into a NN readable format
             1. Encode board
-            2. Encode board into binary representation(4bit)
-            3. Encode turn
+            2. Encode pawn structure(-1 for black 1 for white 0 for none)
+            3. Encode board into binary representation(4bit)
+            4. Encode turn
+            TODO. pawn strcuture
         """
         
         # Check if valid board before preprocessing
         assert board.is_valid()
 
-        # 1. Board state encoding 
+         
         board_state = np.zeros(64, np.uint8)
+        pawn_structure = np.zeros(64, np.int8)
         for i in range(64):
             pp = board.piece_at(i)
             
             if pp is None:
                 continue
+
+            # 1. Board state encoding
             board_state[i] = {"P": 1, "N": 2, "B": 3, "R": 4, "Q": 5, "K": 6, \
                     "p": 9, "n":10, "b":11, "r":12, "q":13, "k": 14}[pp.symbol()]
-        
-        board_state = board_state.reshape(8, 8)
+            
+            # 2. Encode pawn structure            
+            if pp.symbol() == "P" or pp.symbol() == "p":
+                pawn_structure[i] = {"P": 1, "p": -1}[pp.symbol()]
 
-        # 2. Binary state
+        board_state = board_state.reshape(8, 8) 
+        pawn_structure = pawn_structure.reshape(8, 8)
+
+        # 3. Binary state
         state = np.zeros((5, 8, 8), np.uint8)
 
         # 0 - 3 columns to binary
@@ -69,7 +79,7 @@ class LunaDataset(Dataset):
         state[2] = (board_state>>1)&1
         state[3] = (board_state>>0)&1
 
-        # 4th column is who's turn it is
+        # 4. 4th column is who's turn it is
         state[4] = (board.turn*1.0)
 
         return state

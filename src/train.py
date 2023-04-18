@@ -10,7 +10,7 @@ from luna import LunaNN
 MODEL_NAME = "infinite_luna.pth"
 EPOCHS = 10_000_000
 VERBOSE = True
-CUDA = True
+CUDA = False
 
 def infinite_train() -> None:
     """ctrl-c to stop training Luna"""
