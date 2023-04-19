@@ -1,9 +1,10 @@
 """
-    Luna-Chess position evaluator
+    Luna-Chess position evaluator(deprecated/old)
 """
 
 import chess
 import chess.pgn
+from .luna_state import LunaState
 
 MAXVAL = 10000
 class LunaEval():
@@ -17,23 +18,24 @@ class LunaEval():
         chess.KING: 0
         }
     
-    def __init__(self) -> None:
+    def __init__(self, verbose=False) -> None:
+        if verbose: print(f"[LUNAEVAL] Defining base evaluation")
         self.reset()
         self.memo = {}
 
     def reset(self) -> None:
         self.count = 0
 
-    def __call__(self, s):
+    def __call__(self, s: LunaState):
         self.count += 1
         key = s.key()
         if key not in self.memo:
             self.memo[key] = self.value(s)
         return self.memo[key]
 
-    def value(self, s: chess.pgn.Game):
+    def value(self, s: LunaState):
         """Calculate a board's value"""
-        b = s.board()
+        b = s.board
         
         # game over values
         if b.is_game_over():

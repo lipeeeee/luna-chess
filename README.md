@@ -37,3 +37,10 @@ model = keras.models.Sequential([
 
 model.compile(optimizer=optimizer, loss=loss)
 ```
+
+
+TODO
+------
+
+1. implement Luna in a webserver(such as firebase)
+2. Add a bit of randomness when it comes to computer moves
