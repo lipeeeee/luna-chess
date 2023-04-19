@@ -18,7 +18,7 @@
 <p>
 
 ## Deep Neural Network
-I used pytorch because of it's explicit control over networks, the architecture(can be improved by addding pooling2d and other types of layers): 
+I used pytorch because of it's explicit control over networks(the architecture can be improved by addding pooling2d and other types of layers), the simplified goal of this network is to take in a board state in ``a1()`` and return a evaluation score in ``last()``:
 ```python
 LunaNN(
   (a1): Conv2d(5, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
@@ -37,6 +37,9 @@ LunaNN(
   (loss): MSELoss()
 )
 ```
+
+## Feature engineering
+...
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
@@ -69,7 +72,7 @@ I also implemented a feature to Luna that allows her to play with itself
   
   
 ## HTML Wrapper
-To test the usablity of the Luna package I made a **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
+To test the usablity of the Luna package I made a VERY SIMPLE **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
 
 You can check the wrapper at ``src/luna_html_wrapper.py``.
 
