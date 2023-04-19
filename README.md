@@ -5,9 +5,11 @@
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 ![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)
 
-# Luna-Chess
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a [Deep Neural Network](https://www.google.com) to evaluate a board state and then using [Alpha–beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning) to search through the space of possible future board states and evaluate what is the best move over-time.
+<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a **Deep Neural Network** to evaluate a board state and then using **Alpha–beta pruning** to search through the space of possible future board states and evaluate what is the best move over-time.
+
+![Sem título](https://user-images.githubusercontent.com/62669782/233196743-ed90f2c3-7e2d-4a42-a469-b344e99115a4.png)
+
 
 <p>
 
