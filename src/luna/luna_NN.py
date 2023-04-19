@@ -9,14 +9,14 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, INPUT_PAWN_STRUCTURE
+from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, INPUT_PAWN_STRUCTURE, CUDA
 from .luna_dataset import LunaDataset
 
 # Note: Training only has a CUDA implementation
 class LunaNN(nn.Module):
     """Pytorch Neural Network"""
 
-    def __init__(self, model_file=CURRENT_MODEL, cuda=True, verbose=False, epochs=100, save_after_each_epoch=False) -> None:
+    def __init__(self, model_file=CURRENT_MODEL, verbose=False, epochs=100, save_after_each_epoch=False) -> None:
         super(LunaNN, self).__init__()
 
         # Neural Net definition
@@ -28,8 +28,10 @@ class LunaNN(nn.Module):
         self.epochs = epochs
         self.save_after_each_epoch = save_after_each_epoch
         
-        if cuda:
+        if CUDA:
             self.cuda()
+        else:
+            raise Exception("Non-Cuda implementation still TODO")
 
         # Dataset Initialazation
         if verbose: print(f"[DATASET] Initializing dataset...")
@@ -136,7 +138,7 @@ class LunaNN(nn.Module):
     def _train(self, epochs, save_after_each_epoch=True) -> None:
         """Train LunaNN()(only on cuda)"""
         assert not self.model_exists()
-        # assert self.cuda
+        assert CUDA
         
         self.train()
 

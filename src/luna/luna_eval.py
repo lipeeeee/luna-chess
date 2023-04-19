@@ -6,14 +6,14 @@ import chess
 import chess.pgn
 from .luna_state import LunaState
 from .luna_NN import LunaNN
-from .luna_constants import INPUT_PAWN_STRUCTURE
+from .luna_constants import INPUT_PAWN_STRUCTURE, CUDA
 import torch
 
 MAXVAL = 10000
 class LunaEval():
     """Luna-Chess trained position evaluator"""
     def __init__(self, verbose=False):
-        self.model = LunaNN(cuda=True, verbose=verbose, epochs=100, save_after_each_epoch=True).to("cuda")   
+        self.model = LunaNN(cuda=CUDA, verbose=verbose, epochs=100, save_after_each_epoch=True)
         assert self.model.model_exists()
 
     def __call__(self, s:LunaState):

@@ -13,3 +13,5 @@ NUM_SAMPLES = 5_000_000
 
 # This just warns the model about if the input will get a pawn struct
 INPUT_PAWN_STRUCTURE = False
+
+CUDA = True
