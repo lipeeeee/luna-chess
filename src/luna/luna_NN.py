@@ -9,17 +9,18 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES
+from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER
 from .luna_dataset import LunaDataset
 
-MODEL_FOLDER = "networks"
+# Note: Training only has a CUDA implementation
 class LunaNN(nn.Module):
     """Pytorch Neural Network"""
 
     def __init__(self, model_file=CURRENT_MODEL, cuda=True, verbose=False, epochs=100, save_after_each_epoch=False) -> None:
+        super(LunaNN, self).__init__()
+
         # Neural Net definition
         if verbose: print(f"[NEURAL NET] Initializing neural network...")
-        super(LunaNN, self).__init__()
         self.define()
         self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
@@ -35,7 +36,7 @@ class LunaNN(nn.Module):
         self.train_loader = DataLoader(self.dataset, batch_size=256, shuffle=True)        
         
         self.model_file = model_file # .pt file(ex: main_luna.pt)
-        self.model_path = os.path.join(LUNA_MAIN_FOLDER, MODEL_FOLDER, model_file)
+        self.model_path = os.path.join(LUNA_MAIN_FOLDER, LUNA_MODEL_FOLDER, model_file)
 
         # Check if existing model
         if self.model_exists():
@@ -69,29 +70,7 @@ class LunaNN(nn.Module):
 
         self.last = nn.Linear(128, 1)
 
-    def secondary_define(self) -> None:
-        """Secondary neural network"""
-        # Convolutional layers
-        self.conv1 = nn.Conv2d(in_channels=6, out_channels=64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-
-        # Fully connected layers
-        self.fc1 = nn.Linear(in_features=256 * 8 * 8, out_features=512)
-        self.fc2 = nn.Linear(in_features=512, out_features=1)
-
-    def secondary_forward(self, x):
-        """Secondary forward prop implementation for secondary_deifne"""
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(-1, 256 * 8 * 8)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-
-        return x
-
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         """Forward prop implementation"""
         x = F.relu(self.a1(x))
         x = F.relu(self.a2(x))
@@ -118,6 +97,29 @@ class LunaNN(nn.Module):
         # value output
         return F.tanh(x)
 
+
+    def secondary_define(self) -> None:
+        """Secondary neural network"""
+        # Convolutional layers
+        self.conv1 = nn.Conv2d(in_channels=6, out_channels=64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+
+        # Fully connected layers
+        self.fc1 = nn.Linear(in_features=256 * 8 * 8, out_features=512)
+        self.fc2 = nn.Linear(in_features=512, out_features=1)
+
+    def secondary_forward(self, x):
+        """Secondary forward prop implementation for secondary_deifne"""
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = x.view(-1, 256 * 8 * 8)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
+
     def load(self) -> None:
         """Load luna from a .pth file"""
         self.load_state_dict(torch.load(self.model_path))
@@ -128,12 +130,13 @@ class LunaNN(nn.Module):
         torch.save(self.state_dict(), self.model_path)
     
     def _train(self, epochs, save_after_each_epoch=True) -> None:
-        """Train LunaNN"""
+        """Train LunaNN()(only on cuda)"""
         assert not self.model_exists()
+        # assert self.cuda
         
         self.train()
 
-        for epoch in range(1, epochs):
+        for epoch in range(epochs):
             all_loss = 0
             num_loss = 0
             for batch_idx, (data, target) in enumerate(self.train_loader):
@@ -152,7 +155,7 @@ class LunaNN(nn.Module):
                 all_loss += loss.item()
                 num_loss += 1
 
-            print("%3d: %f" % (epoch, all_loss/num_loss))
+            print("EPOCH [%3d]: %f" % (epoch, all_loss/num_loss))
             if save_after_each_epoch: self.save()
     
     def model_exists(self) -> bool:

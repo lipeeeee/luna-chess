@@ -1,8 +1,6 @@
 """
     file used to generate a Luna-Chess model at will,
     this is supposed to be ran on its own with infinite epochs(ctrl-c to stop training)
-
-    make 
 """
 
 from luna import LunaNN
@@ -10,7 +8,7 @@ from luna import LunaNN
 MODEL_NAME = "infinite_luna.pth"
 EPOCHS = 20_000_000
 VERBOSE = True
-CUDA = False
+CUDA = True
 SAVE_AFTER_EACH_EPOCH = True
 
 def infinite_train() -> None:

@@ -2,7 +2,7 @@
     Zero Knowledge Chess Engine
 
     
-    htmlhandler ->
+    Wrapper(either html or anything else) ->
         Luna ->
             Luna_NN ->
                 Luna_Eval ->

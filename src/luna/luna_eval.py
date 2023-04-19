@@ -32,6 +32,7 @@ class LunaEval():
         return self.memo[key]
 
     def value(self, s: chess.pgn.Game):
+        """Calculate a board's value"""
         b = s.board()
         
         # game over values

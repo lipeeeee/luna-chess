@@ -4,14 +4,10 @@
 
 import os
 import chess.pgn
-from chess import Bitboard
 import numpy as np
 from torch.utils.data import Dataset
 
-from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER
-
-DATASET_FOLDER = "processed" 
-DATASET_PREFIX = "luna_dataset_" # + number + ".npz"
+from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOLDER, LUNA_DATASET_PREFIX
 
 class LunaDataset(Dataset):
     """Dataset builder for Luna"""
@@ -20,8 +16,8 @@ class LunaDataset(Dataset):
         self.num_samples = num_samples
         self.verbose = verbose
 
-        self.dataset_folder = os.path.join(LUNA_MAIN_FOLDER, DATASET_FOLDER)
-        self.dataset_full_path = os.path.join(self.dataset_folder, DATASET_PREFIX + str(self.num_samples) + ".npz")
+        self.dataset_folder = os.path.join(LUNA_MAIN_FOLDER, LUNA_DATASET_FOLDER)
+        self.dataset_full_path = os.path.join(self.dataset_folder, LUNA_DATASET_PREFIX + str(self.num_samples) + ".npz")
 
         if self.dataset_exists():
             if verbose: print(f"[DATASET] Dataset found at: {self.dataset_full_path}, loading...")
@@ -149,4 +145,4 @@ class LunaDataset(Dataset):
 
     def dataset_exists(self) -> bool:
         """Checks if a dataset with the given number of samples has been found"""
-        return os.path.exists(os.path.join(LUNA_MAIN_FOLDER, DATASET_FOLDER, self.dataset_full_path))
+        return os.path.exists(os.path.join(LUNA_MAIN_FOLDER, LUNA_DATASET_FOLDER, self.dataset_full_path))
