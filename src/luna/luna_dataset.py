@@ -32,7 +32,7 @@ class LunaDataset(Dataset):
     def __len__(self) -> int:
         return self.X.shape[0]
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> tuple:
         return (self.X[index], self.Y[index])
 
     def serialize_board(self, board: chess.Board):
