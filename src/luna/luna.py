@@ -14,7 +14,6 @@ class Luna():
     def __init__(self, verbose=False, max_depth=5) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
         self.verbose = verbose
-        self.luNNa = LunaNN(cuda=True, verbose=verbose, epochs=100, save_after_each_epoch=True)
         self.luna_eval = LunaEval(verbose=verbose)
         self.board_state = LunaState()
         self.max_depth = max_depth

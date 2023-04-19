@@ -3,9 +3,8 @@
     this is supposed to be ran on its own with infinite epochs(ctrl-c to stop training)
 """
 
-from luna import LunaNN
+from luna import LunaNN, CURRENT_MODEL
 
-MODEL_NAME = "infinite_luna.pth"
 EPOCHS = 20_000_000
 VERBOSE = True
 CUDA = True
@@ -13,7 +12,7 @@ SAVE_AFTER_EACH_EPOCH = True
 
 def infinite_train() -> None:
     """ctrl-c to stop training Luna"""
-    LunaNN(MODEL_NAME, cuda=CUDA, verbose=VERBOSE, epochs=EPOCHS, save_after_each_epoch=SAVE_AFTER_EACH_EPOCH)
+    LunaNN(model_file=CURRENT_MODEL, cuda=CUDA, verbose=VERBOSE, epochs=EPOCHS, save_after_each_epoch=SAVE_AFTER_EACH_EPOCH)
 
 if __name__ == "__main__":
     if VERBOSE: print(f"[NEURAL NET] Training Luna Indefinitely... Ctrl-C to stop")

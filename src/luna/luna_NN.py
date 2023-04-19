@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER
+from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, INPUT_PAWN_STRUCTURE
 from .luna_dataset import LunaDataset
 
 # Note: Training only has a CUDA implementation
@@ -27,6 +27,7 @@ class LunaNN(nn.Module):
         self.loss = nn.MSELoss()
         self.epochs = epochs
         self.save_after_each_epoch = save_after_each_epoch
+        
         if cuda:
             self.cuda()
 
@@ -43,7 +44,7 @@ class LunaNN(nn.Module):
             if verbose: print(f"[NEURAL NET] Found existing model at: {self.model_path}, loading...")
             self.load()
         else:
-            if verbose: print(f"[NEURAL NET] NO EXISTING NEURAL NET, Training new neural network...")
+            if verbose: print(f"[NEURAL NET] NO EXISTING NEURAL NET AT: {self.model_path}, Training new neural network...")
             self._train(epochs=self.epochs, save_after_each_epoch=self.save_after_each_epoch)
 
             if verbose: print(f"[NEURAL NET] FINISHED TRAINING, SAVING...")
@@ -52,7 +53,11 @@ class LunaNN(nn.Module):
     def define(self) -> None:
         """Define neural net"""
         # 5 -> 6
-        self.a1 = nn.Conv2d(6, 16, kernel_size=3, padding=1)
+        if INPUT_PAWN_STRUCTURE:
+            self.a1 = nn.Conv2d(6, 16, kernel_size=3, padding=1)
+        else:
+            self.a1 = nn.Conv2d(5, 16, kernel_size=3, padding=1)
+
         self.a2 = nn.Conv2d(16, 16, kernel_size=3, padding=1)
         self.a3 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
 
@@ -95,8 +100,7 @@ class LunaNN(nn.Module):
         x = self.last(x)
 
         # value output
-        return F.tanh(x)
-
+        return torch.tanh(x)
 
     def secondary_define(self) -> None:
         """Secondary neural network"""
@@ -123,7 +127,7 @@ class LunaNN(nn.Module):
     def load(self) -> None:
         """Load luna from a .pth file"""
         self.load_state_dict(torch.load(self.model_path))
-        self.eval()
+        # self.eval()
 
     def save(self) -> None:
         """Save luna weights and biases and everything else into a .pt file"""

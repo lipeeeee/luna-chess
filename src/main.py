@@ -4,20 +4,23 @@
     
     Wrapper(either html or anything else) ->
         Luna ->
-            Luna_NN ->
-                Luna_Eval ->
+            Luna_Eval ->
+                Luna_NN ->
                 Luna_dataset ->
-                Luna_Eval ->
 
     by lipeeeee
 """
 
-from luna import Luna
+from luna import *
+import chess
 import sys
 
 def main() -> int:
     """Entry Point"""
-    luna_chess = Luna(verbose=True)
+    le = LunaEval(True)
+    s = LunaState(chess.Board())
+    print("PRED", le(s))
+
     return 0
 
 

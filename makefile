@@ -8,5 +8,5 @@ build:
 	python src/main.py
 
 # infinite train
-infinite_train:
+train:
 	python src/train.py

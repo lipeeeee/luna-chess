@@ -5,9 +5,27 @@
 import chess
 import chess.pgn
 from .luna_state import LunaState
+from .luna_NN import LunaNN
+from .luna_constants import INPUT_PAWN_STRUCTURE
+import torch
 
 MAXVAL = 10000
 class LunaEval():
+    """Luna-Chess trained position evaluator"""
+    def __init__(self, verbose=False):
+        self.model = LunaNN(cuda=True, verbose=verbose, epochs=100, save_after_each_epoch=True).to("cuda")   
+        assert self.model.model_exists()
+
+    def __call__(self, s:LunaState):
+        if INPUT_PAWN_STRUCTURE:
+            brd = LunaState.serialize_board(s.board)
+        else:
+            brd = LunaState.no_pawn_serialize_board(s.board)
+
+        output = self.model(torch.tensor(brd, device="cuda").float())
+        return float(output.data[0][0])
+
+class oldLunaEval():
     """Luna-Chess custom position evaluator"""
     values = {  
         chess.PAWN: 1,

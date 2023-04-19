@@ -6,8 +6,8 @@ import os
 import chess.pgn
 import numpy as np
 from torch.utils.data import Dataset
-
-from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOLDER, LUNA_DATASET_PREFIX
+from .luna_state import LunaState
+from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOLDER, LUNA_DATASET_PREFIX, INPUT_PAWN_STRUCTURE
 
 class LunaDataset(Dataset):
     """Dataset builder for Luna"""
@@ -23,7 +23,7 @@ class LunaDataset(Dataset):
             if verbose: print(f"[DATASET] Dataset found at: {self.dataset_full_path}, loading...")
             self.load()
         else:
-            if verbose: print(f"[DATASET] NO DATABASE, GENERATING AT: {self.dataset_full_path}...")
+            if verbose: print(f"[DATASET] NO DATABASE, GENERATING AT: {self.dataset_full_path} | WITH PAWN STRUCT:{INPUT_PAWN_STRUCTURE}...")
             self.X, self.Y = self.generate_dataset()
             
             if self.verbose: print(f"[DATASET] Saving dataset at: {self.dataset_full_path}...")
@@ -78,7 +78,11 @@ class LunaDataset(Dataset):
                 board = game.board()
                 for i, move in enumerate(game.mainline_moves()):
                     board.push(move)
-                    ser = self.serialize_board(board)
+                    if INPUT_PAWN_STRUCTURE:
+                        ser = LunaState.serialize_board(board)
+                    else:
+                        ser = LunaState.no_pawn_serialize_board(board)
+                         
                     X.append(ser)
                     Y.append(res_value)
                 
