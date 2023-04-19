@@ -6,7 +6,8 @@
 ![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)
 
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a **Deep Neural Network** to evaluate a board state and then using **Alpha–beta pruning** to search through the space of possible future board states and evaluate what is the best move over-time.
+<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a <b>Deep Neural Network</b> to evaluate a board state and then using <b>Alpha–beta pruning</b> to search through the space of possible future board states and evaluate what is the best move over-time.
+
 
 ![Sem título](https://user-images.githubusercontent.com/62669782/233196743-ed90f2c3-7e2d-4a42-a469-b344e99115a4.png)
 
@@ -75,4 +76,3 @@ TODO
 
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves
-3. make so winning side doesnt play random moves just because it is winnign
