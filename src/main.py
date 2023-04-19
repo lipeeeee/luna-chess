@@ -1,9 +1,10 @@
 """
-    Zero Knowledge Chess Engine
-
+    Luna-Chess, a chess engine
     
+    Project Architecture    
     Wrapper(either html or anything else) ->
         Luna ->
+            Luna_State ->
             Luna_Eval ->
                 Luna_NN ->
                 Luna_dataset ->
