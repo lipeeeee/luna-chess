@@ -5,16 +5,20 @@
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 ![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)
 
-# Luna-Chess
+# Luna Chess
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a [Deep Neural Network](https://www.google.com) to evaluate a board state and then using [Alpha–beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning) to search through the space of possible future board states and evaluate what is the best move over-time.
+<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a <b>Deep Neural Network</b> to evaluate a board state and then using <b>Alpha–beta pruning</b> to search through the space of possible future board states and evaluate what is the best move over-time.
+
+
+![Sem título](https://user-images.githubusercontent.com/62669782/233196743-ed90f2c3-7e2d-4a42-a469-b344e99115a4.png)
+
 
 <p>
 
 <p>
 
 ## Deep Neural Network
-I used pytorch because of it's explicit control over networks, the architecture(can be improved by addding pooling2d and other types of layers): 
+I used pytorch because of it's explicit control over networks(the architecture can be improved by addding pooling2d and other types of layers), the simplified goal of this network is to take in a board state in ``a1()`` and return a evaluation score in ``last()``:
 ```python
 LunaNN(
   (a1): Conv2d(5, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
@@ -33,6 +37,9 @@ LunaNN(
   (loss): MSELoss()
 )
 ```
+
+## Feature engineering
+...
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
@@ -56,9 +63,16 @@ Wrapper(either html or anything else) ->
             Luna_NN ->
             Luna_dataset ->
 ```
+## Self-Play
+I also implemented a feature to Luna that allows her to play with itself 
+  
+  
+  ![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
 
+  
+  
 ## HTML Wrapper
-To test the usablity of the Luna package I made a **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
+To test the usablity of the Luna package I made a VERY SIMPLE **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
 
 You can check the wrapper at ``src/luna_html_wrapper.py``.
 
@@ -67,10 +81,16 @@ You can also(on the project main folder) run the web server with:
 make web
 ```
 
+# Usage
+```
+# install every package
+pip install -r requirements.txt
+# run web server
+make web
+```
 
 TODO
 ------
 
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves
-3. make so winning side doesnt play random moves just because it is winnign
