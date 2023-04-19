@@ -60,7 +60,14 @@ Wrapper(either html or anything else) ->
             Luna_NN ->
             Luna_dataset ->
 ```
+## Self-Play
+I also implemented a feature to Luna that allows her to play with itself 
+  
+  
+  ![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
 
+  
+  
 ## HTML Wrapper
 To test the usablity of the Luna package I made a **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
 
@@ -71,6 +78,13 @@ You can also(on the project main folder) run the web server with:
 make web
 ```
 
+# Usage
+```
+# install every package
+pip install -r requirements.txt
+# run web server
+make web
+```
 
 TODO
 ------
