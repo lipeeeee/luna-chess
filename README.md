@@ -1,41 +1,70 @@
 <div align="center">
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![Keras](https://img.shields.io/badge/Keras-%23D00000.svg?style=for-the-badge&logo=Keras&logoColor=white)
-![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
 ![pytorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
-![tensorflow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
-<!-- [![Windows](https://img.shields.io/badge/Platform-Windows-0078d7.svg?style=for-the-badge)](https://en.wikipedia.org/wiki/Microsoft_Windows) -->
-<!-- [![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)](LICENSE) -->
+![License](https://img.shields.io/github/license/R3nzTheCodeGOD/R3nzSkin.svg?style=for-the-badge)
 
 # Luna-Chess
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, I built it with little to no knowledge about the backend of chess engines(CE), I conceptualized it by reading about Reinforcement Learning and Deep Learning and it's applicability to chess.
+<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a [Deep Neural Network](https://www.google.com) to evaluate a board state and then using [Alpha–beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning) to search through the space of possible future board states and evaluate what is the best move over-time.
 
 <p>
 
-Ultimately i chose a <b>Deep Neural Network</b> approach since reinforcement learning would be much more computationaly expensive and also a neural network would adapt much better to new states since it could detect patterns with ease such as <i>zugzwang</i> and <i> perpetual checks</i>.
 <p>
 
-## Architecture
+## Deep Neural Network
+I used pytorch because of it's explicit control over networks, the architecture(can be improved by addding pooling2d and other types of layers): 
 ```python
-optimizer = 'adam'
-loss = 'mean_squared_error'
-N = 864
-input_shape = (8, 8, 12)
+LunaNN(
+  (a1): Conv2d(5, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (a2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (a3): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2))
+  (b1): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (b2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (b3): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2))
+  (c1): Conv2d(64, 64, kernel_size=(2, 2), stride=(1, 1), padding=(1, 1))
+  (c2): Conv2d(64, 64, kernel_size=(2, 2), stride=(1, 1), padding=(1, 1))
+  (c3): Conv2d(64, 128, kernel_size=(2, 2), stride=(2, 2))
+  (d1): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+  (d2): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+  (d3): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+  (last): Linear(in_features=128, out_features=1, bias=True)
+  (loss): MSELoss()
+)
+```
 
-model = keras.models.Sequential([
-    layers.Conv2D(64, 3, activation='relu', input_shape=input_shape),
-    layers.Conv2D(64, 3, activation='relu'),
-    layers.Flatten(),
-    layers.Dense(128, activation='relu'),
-    layers.Dense(64, activation='relu'),
-    layers.Dense(1, activation='linear')
-])
+## Project Architecture
+I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
+```python
+import luna
+```
+You have acess to:
+- Luna neural network
+- Luna evaluation function
+- Luna custom board states
+- Luna dataset creation and handling
+- All constants used by Luna
+- The actual engine logic, obviously
 
-model.compile(optimizer=optimizer, loss=loss)
+### The architecture:
+```
+Wrapper(either html or anything else) ->
+    Luna ->
+        Luna_State ->
+        Luna_Eval ->
+            Luna_NN ->
+            Luna_dataset ->
+```
+
+## HTML Wrapper
+To test the usablity of the Luna package I made a **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
+
+You can check the wrapper at ``src/luna_html_wrapper.py``.
+
+You can also(on the project main folder) run the web server with:
+```makefile
+make web
 ```
 
 

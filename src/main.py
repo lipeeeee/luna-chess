@@ -1,6 +1,6 @@
 """
     Luna-Chess, a chess engine
-    
+
     Project Architecture    
     Wrapper(either html or anything else) ->
         Luna ->
@@ -18,10 +18,11 @@ import sys
 
 def main() -> int:
     """Entry Point"""
-    le = LunaEval(True)
-    s = LunaState(chess.Board())
-    print("PRED", le(s))
-
+    #le = LunaEval(True)
+    #s = LunaState(chess.Board())
+    #print("PRED", le(s))
+    ln = luna_NN.LunaNN()
+    print(ln)
     return 0
 
 
