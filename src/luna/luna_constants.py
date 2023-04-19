@@ -15,3 +15,5 @@ NUM_SAMPLES = 5_000_000
 INPUT_PAWN_STRUCTURE = False
 
 CUDA = True
+
+SEARCH_DEPTH = 4 # 5 takes too long and 4 is good enough

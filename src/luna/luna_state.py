@@ -3,6 +3,7 @@
 """
 
 import chess
+from chess import Move
 import numpy as np
 
 class LunaState(): 
@@ -17,6 +18,10 @@ class LunaState():
     def key(self):
         """State key"""
         return (self.board.board_fen(), self.board.turn, self.board.castling_rights, self.board.ep_square)
+    
+    def state_after_move(self, move:Move):
+        """Returns a board copy after a move"""
+        return self.serialize_board
 
     @staticmethod
     def serialize_board(board: chess.Board):
@@ -122,4 +127,5 @@ class LunaState():
         return state
 
     def edges(self):
+        """Self-Explanatory..."""
         return list(self.board.legal_moves)

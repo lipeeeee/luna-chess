@@ -5,92 +5,100 @@
 from .luna_NN import LunaNN
 from .luna_eval import LunaEval, MAXVAL
 from .luna_state import LunaState
+from .luna_constants import SEARCH_DEPTH
 import time
 import chess
 
 class Luna():
     """Luna_chess engine main class"""
 
-    def __init__(self, verbose=False, max_depth=5) -> None:
+    def __init__(self, verbose=False) -> None:
         """If on initialization there is no pre-saved model we create one and train it, to then save it"""
         self.verbose = verbose
         self.luna_eval = LunaEval(verbose=verbose)
         self.board_state = LunaState()
-        self.max_depth = max_depth
 
     @property
     def board(self) -> chess.Board:
         return self.board_state.board
 
-    def computer_minimax(self, s:LunaState, v:LunaEval, depth:int, a, b, big=False):
-        """Perform minimax on a board_state"""
-
-        if depth >= 5 or s.board.is_game_over():
+    # Search algo: https://www.chessprogramming.org/Alpha-Beta
+    def alpha_beta_pruning(self, s:LunaState, v:LunaEval, depth:int, alpha: int, beta: int, root=False):
+        """Alpha-Beta Pruning Search, gets eval and tuple with moves and its eval"""
+        if depth == 0 or s.board.is_game_over():
             return v(s)
         
-        # white is maximizing player
+        # get all legal moves from the current position for the current player
         turn = s.board.turn
+        legal_moves = [move for move in s.board.legal_moves if s.board.piece_at(move.from_square).color == turn]
+        
+        if root:
+            eval_tuple_list = []
+
         if turn == chess.WHITE:
-            ret = -MAXVAL
+            value = -MAXVAL
+            for move in legal_moves:
+                # get board after move and calculate it
+                s.board.push(move)
+                alpha_beta_iteration_value = self.alpha_beta_pruning(s, v, depth-1, alpha, beta)
+                value = max(value, alpha_beta_iteration_value)
+                alpha = max(alpha, value)
+                if root:
+                    eval_tuple_list.append((v(s), move))
+                # get back to original board
+                s.board.pop()
+
+                # this will 
+                if alpha >= beta:
+                    break
         else:
-            ret = MAXVAL
-        if big:
-            bret = []
+            value = MAXVAL
+            for move in legal_moves:
+                # get board after move and calculate it
+                s.board.push(move)
+                alpha_beta_iteration_value = self.alpha_beta_pruning(s, v, depth-1, alpha, beta)
+                value = min(value, alpha_beta_iteration_value)
+                beta = min(beta, value)
+                if root:
+                    eval_tuple_list.append((v(s), move))
+                # get back to original board
+                s.board.pop()
 
-        # can prune here with beam search
-        isort = []
-        for e in s.board.legal_moves:
-            s.board.push(e)
-            isort.append((v(s), e))
-            s.board.pop()
-        move = sorted(isort, key=lambda x: x[0], reverse=s.board.turn)
-
-        # beam search beyond depth 3
-        if depth >= 3:
-            move = move[:10]
-
-        for e in [x[1] for x in move]:
-            s.board.push(e)
-            tval = self.computer_minimax(s, v, depth+1, a, b)
-            s.board.pop()
-            if big:
-                bret.append((tval, e))
+                # this will 
+                if beta <= alpha:
+                    break
             
-            if turn == chess.WHITE:
-                ret = max(ret, tval)
-                a = max(a, ret)
-                if a >= b:
-                    break  # b cut-off
-            else:
-                ret = min(ret, tval)
-                b = min(b, ret)
-                if a >= b:
-                    break  # a cut-off
-
-        if big:
-            return ret, bret
+        if root:
+            return value, eval_tuple_list
         else:
-            return ret
+            return value
 
-    def explore_leaves(self, s:LunaState, v:LunaEval):
-        ret = []
-        start = time.time()
-        v.reset()
+    def explore_leaves(self, s:LunaState, v:LunaEval) -> list:
+        """
+            Explore Neighbour states with alpha pruning and calculate values,
+            this function returns the value of each neighbour after (DEPTH) moves
+        """
+        if self.verbose: start = time.time()
         bval = v(s)
-        cval, ret = self.computer_minimax(s, v, 0, a=-MAXVAL, b=MAXVAL, big=True)
+        v.reset()
+        ret, eval_tuple_list = self.alpha_beta_pruning(s, v, depth=SEARCH_DEPTH, alpha=-MAXVAL, beta=MAXVAL, root=True)
 
         if self.verbose:
             eta = time.time() - start
-            print("[EXPLORING] %.2f -> %.2f: explored %d nodes in %.3f seconds %d/sec" % (bval, cval, v.count, eta, int(v.count/eta)))
+            print("[EXPLORING] %.2f: explored %d nodes in %.3f seconds %d/sec" % (bval, v.count, eta, int(v.count/eta)))
+            print(f"[BOARD]\n{s.board}")
 
-        return ret
+        return eval_tuple_list
 
     def computer_move(self, s:LunaState, v:LunaEval):
-        # computer move
+        """Logic for selecting and making move"""
+        
+        # Explore all neighbours and it's values
         move = sorted(self.explore_leaves(s, v), key=lambda x: x[0], reverse=s.board.turn)
         if len(move) == 0:
             return
         
+        # Get Move from best value
         # TODO: Add a bit of randomness
         chosen_move = move[0][1]
 
@@ -99,7 +107,8 @@ class Luna():
             for i,m in enumerate(move[0:3]):
                 print(f"  {m}")
             print(f"[COMPUTER MOVE] {s.board.turn} MOVING TO {chosen_move}")
-        
+
+        # make move        
         s.board.push(chosen_move)
 
     def new_game(self) -> None:

@@ -28,19 +28,22 @@ class LunaNN(nn.Module):
         self.epochs = epochs
         self.save_after_each_epoch = save_after_each_epoch
         
+        # Cuda handling, only CUDA training for now
         if CUDA:
             self.cuda()
         else:
             raise Exception("Non-Cuda implementation still TODO")
-
-        # Dataset Initialazation
-        if verbose: print(f"[DATASET] Initializing dataset...")
-        self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)
-        self.train_loader = DataLoader(self.dataset, batch_size=256, shuffle=True)        
         
         self.model_file = model_file # .pt file(ex: main_luna.pt)
         self.model_path = os.path.join(LUNA_MAIN_FOLDER, LUNA_MODEL_FOLDER, model_file)
 
+        # if there isnt a model generate dataset
+        if not self.model_exists():
+            # Dataset Initialazation
+            if verbose: print(f"[DATASET] Initializing dataset...")
+            self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
+            self.train_loader = DataLoader(self.dataset, batch_size=256, shuffle=True)        
+        
         # Check if existing model
         if self.model_exists():
             if verbose: print(f"[NEURAL NET] Found existing model at: {self.model_path}, loading...")

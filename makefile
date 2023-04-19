@@ -1,6 +1,6 @@
 
 # web server
-luna_web:
+web:
 	python src/luna_html_wrapper.py
 
 # normal build

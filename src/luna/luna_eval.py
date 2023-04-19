@@ -1,5 +1,6 @@
 """
-    Luna-Chess position evaluator(deprecated/old)
+    Basically the "Brain" of luna,
+    LunaEval to evaluate a certain board position
 """
 
 import chess
@@ -9,24 +10,34 @@ from .luna_NN import LunaNN
 from .luna_constants import INPUT_PAWN_STRUCTURE, CUDA
 import torch
 
-MAXVAL = 10000
+MAXVAL = 100000
 class LunaEval():
-    """Luna-Chess trained position evaluator"""
-    def __init__(self, verbose=False):
-        self.model = LunaNN(cuda=CUDA, verbose=verbose, epochs=100, save_after_each_epoch=True)
+    """Luna-Chess trained position evaluator(1 = white win, 0 = draw, -1 = black win)"""
+    
+    def __init__(self, verbose=False) -> None:
+        self.model = LunaNN(verbose=verbose, epochs=100, save_after_each_epoch=True)
         assert self.model.model_exists()
+        self.reset()
 
-    def __call__(self, s:LunaState):
+    def __call__(self, s:LunaState) -> float:
+        """override object call to make it so we can evaluate positions by: LunaEval(state) -> float"""
         if INPUT_PAWN_STRUCTURE:
             brd = LunaState.serialize_board(s.board)
         else:
             brd = LunaState.no_pawn_serialize_board(s.board)
 
         output = self.model(torch.tensor(brd, device="cuda").float())
+        self.count += 1
         return float(output.data[0][0])
 
+    def reset(self) -> None:
+        """Eval Counter, for printing purposes"""
+        self.count = 0
+
+
+#No neural net eval
 class oldLunaEval():
-    """Luna-Chess custom position evaluator"""
+    """Luna-Chess custom position evaluator(NO NEURAL NET)"""
     values = {  
         chess.PAWN: 1,
         chess.KNIGHT: 3,

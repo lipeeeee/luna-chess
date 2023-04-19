@@ -11,14 +11,14 @@ from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOL
 
 class LunaDataset(Dataset):
     """Dataset builder for Luna"""
-
+   
     def __init__(self, num_samples, verbose=False) -> None:
         self.num_samples = num_samples
         self.verbose = verbose
-
+        
         self.dataset_folder = os.path.join(LUNA_MAIN_FOLDER, LUNA_DATASET_FOLDER)
         self.dataset_full_path = os.path.join(self.dataset_folder, LUNA_DATASET_PREFIX + str(self.num_samples) + ".npz")
-
+        
         if self.dataset_exists():
             if verbose: print(f"[DATASET] Dataset found at: {self.dataset_full_path}, loading...")
             self.load()

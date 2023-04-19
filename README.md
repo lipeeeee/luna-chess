@@ -44,4 +44,4 @@ TODO
 
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves
-3. refactor cuda
+3. make so winning side doesnt play random moves just because it is winnign
