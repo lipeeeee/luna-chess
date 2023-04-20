@@ -18,7 +18,7 @@ class LunaState():
     def key(self):
         """State key"""
         return (self.board.board_fen(), self.board.turn, self.board.castling_rights, self.board.ep_square)
-
+    
     @staticmethod
     def serialize_board(board: chess.Board):
         """Serialize a chess board into a NN readable format
@@ -67,7 +67,7 @@ class LunaState():
         return state
 
     @staticmethod
-    #since the pawn structure might be too complex for the current NN architecture
+    # since the pawn structure might be too complex for the current NN architecture
     # this is a version without the encoding of pawn struct
     def no_pawn_serialize_board(board: chess.Board):
         """Serialize a chess board into a NN readable format
@@ -122,15 +122,115 @@ class LunaState():
 
         return state
 
+    # There is an infinite room for improvement...
     @staticmethod
     def better_serialize_board(board: chess.Board) -> None:
         """Exploration of new serialization techniques
             1. The board binary piece position(a matrix for each piece of each color)
             2. 2 extra matrices for attacked squares for each color
+            note: this function can be very boptimized by using arrays of structs
         """
+        assert board.is_valid()
+
+        # Define piece matrixes
+        white_pawn_structure = np.zeros(64, np.uint8)
+        white_bishop_structure = np.zeros(64, np.uint8)
+        white_knight_structure = np.zeros(64, np.uint8)
+        white_rook_structure = np.zeros(64, np.uint8)
+        white_queen_structure = np.zeros(64, np.uint8)
+        white_king_structure = np.zeros(64, np.uint8)
+        white_attack_structure = np.zeros(64, np.uint8)
+
+        black_pawn_structure = np.zeros(64, np.uint8)
+        black_bishop_structure = np.zeros(64, np.uint8)
+        black_knight_structure = np.zeros(64, np.uint8)
+        black_rook_structure = np.zeros(64, np.uint8)
+        black_queen_structure = np.zeros(64, np.uint8)
+        black_king_structure = np.zeros(64, np.uint8)
+        black_attack_structure = np.zeros(64, np.uint8)
+
+        # board loop
+        for i in range(64):
+            pp = board.piece_at(i)
+
+            if pp is not None:    
+                #white
+                if pp.symbol() == 'P':
+                    white_pawn_structure[i] = 1
+                elif pp.symbol() == 'B':
+                    white_bishop_structure[i] = 1
+                elif pp.symbol() == 'N':
+                    white_knight_structure[i] = 1
+                elif pp.symbol() == "R":
+                    white_rook_structure[i] = 1
+                elif pp.symbol() == 'Q':
+                    white_queen_structure[i] = 1
+                elif pp.symbol() == 'K':
+                    white_king_structure[i] = 1
+                #black
+                elif pp.symbol() == 'p':
+                    black_pawn_structure[i] = 1
+                elif pp.symbol() == 'b':
+                    black_bishop_structure[i] = 1
+                elif pp.symbol() == 'n':
+                    black_knight_structure[i] = 1
+                elif pp.symbol() == 'r':
+                    black_rook_structure[i] = 1
+                elif pp.symbol() == 'q':
+                    black_queen_structure[i] = 1
+                elif pp.symbol() == 'k':
+                    black_king_structure[i] = 1
+                
+            # attacking matrices
+            if board.is_attacked_by(chess.WHITE, i):
+                white_attack_structure[i] = 1
+            elif board.is_attacked_by(chess.BLACK, i):
+                black_attack_structure[i] = 1
+
+        # reshape matrices
+        white_pawn_structure = white_pawn_structure.reshape(8, 8)
+        white_bishop_structure = white_bishop_structure.reshape(8, 8)
+        white_knight_structure = white_knight_structure.reshape(8, 8)
+        white_rook_structure = white_rook_structure.reshape(8, 8)
+        white_queen_structure = white_queen_structure.reshape(8, 8)
+        white_king_structure = white_king_structure.reshape(8, 8)
+        white_attack_structure = white_attack_structure.reshape(8, 8)
+
+        black_pawn_structure = black_pawn_structure.reshape(8, 8)
+        black_bishop_structure = black_bishop_structure.reshape(8, 8)
+        black_knight_structure = black_knight_structure.reshape(8, 8)
+        black_rook_structure = black_rook_structure.reshape(8, 8)
+        black_queen_structure = black_queen_structure.reshape(8, 8)
+        black_king_structure = black_king_structure.reshape(8, 8)
+        black_attack_structure = black_attack_structure.reshape(8, 8)
+
+        # mix them all up        
+        state = np.zeros((15, 8, 8), np.uint8)
         
+        # White positional features
+        state[0] = white_pawn_structure
+        state[1] = white_bishop_structure
+        state[2] = white_knight_structure
+        state[3] = white_rook_structure
+        state[4] = white_queen_structure
+        state[5] = white_king_structure
+        
+        # Black positional features
+        state[6] = black_pawn_structure
+        state[7] = black_bishop_structure
+        state[8] = black_knight_structure
+        state[9] = black_rook_structure
+        state[10] = black_queen_structure
+        state[11] = black_king_structure
 
+        # What white and black are attacking
+        state[12] = white_attack_structure
+        state[13] = black_attack_structure
 
+        # turn
+        state[14] = (board.turn*1.0)
+
+        return state
 
     def edges(self):
         """Self-Explanatory..."""

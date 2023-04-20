@@ -41,6 +41,11 @@ LunaNN(
 ## Feature engineering
 ...
 
+
+## Board Serialization
+...
+
+
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
 ```python
@@ -104,7 +109,36 @@ TODO
 ------
 
 stockfish 0 depth dataset~
- better serialize
+ better serialize, even ebtter!!!
+ Legal moves: The set of legal moves that are available to the player at the current board state.
+
+History of moves: A sequence of previous moves made in the game, along with their corresponding board states.
+
+Material balance: The difference in the number and value of pieces captured by each player.
+
+Positional features: Features that describe the position of each piece, such as the number of attackers and defenders for each piece, the control of key squares on the board, and pawn structure.
+
+Opening book: The history of moves can also be used to create an opening book, which is a collection of known openings and their corresponding moves. By using an opening book as a reference, the neural network can quickly identify strong opening moves and avoid making weak ones.
+
+Overall, providing the history of moves as input to a neural network-based chess engine can help the neural network to develop a more sophisticated understanding of the game and make better decisions based on a broader range of information.
+
+the player to move, castling rights, and en passant possibility.
+
+
+Castling rights: This is a binary feature that indicates whether each player can still castle on either side of the board.
+
+En passant: This is also a binary feature that indicates whether a pawn can currently be captured en passant.
+
+Move count: This is an integer feature that keeps track of the total number of moves made in the game so far.
+
+Piece count: This is a set of integer features that indicates the number of pieces of each type that each player has left on the board.
+
+Material count: This is a set of integer features that indicates the total value of each player's pieces on the board, based on standard chess valuations.
+
+Threats: This is a set of binary features that indicates which squares on the board are currently being threatened by each player's pieces.
+
+Mobility: This is a set of integer features that indicates the number of legal moves that each player can make on their turn.
+
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves
 3. combine Alpha beta pruning w, transposition tables, quiescence search, and iterative deepening 

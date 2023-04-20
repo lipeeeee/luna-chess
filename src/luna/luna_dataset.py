@@ -49,8 +49,13 @@ class LunaDataset(Dataset):
 
     def generate_stockfish_dataset(self, depth=0):
         """Generate dataset with eval Y instead of result Y, using stockfish eval"""
-        
+        X, Y = [], []
 
+
+
+        X = np.array(X)
+        Y = np.array(Y)
+        return X, Y
 
     def generate_dataset(self):
         """Generate dataset of N(num_samples)

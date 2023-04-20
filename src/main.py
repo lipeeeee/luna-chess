@@ -18,12 +18,8 @@ import sys
 
 def main() -> int:
     """Entry Point"""
-    luna_engine = Luna(verbose=True)
-    while 1:
-        board = luna_engine.random_board(200)
-        #print(board)
-        #print(board.fen())
-        a = luna_engine.luna_eval.stockfish(board, 0)
+    luna_s = LunaState()
+    print(luna_s.better_serialize_board(luna_s.board)[12])
 
     return 0
 
