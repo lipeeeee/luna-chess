@@ -4,6 +4,7 @@
 """
 
 import chess
+import chess.engine
 import chess.pgn
 from .luna_state import LunaState
 from .luna_NN import LunaNN
@@ -33,6 +34,17 @@ class LunaEval():
     def reset(self) -> None:
         """Eval Counter, for printing purposes"""
         self.count = 0
+
+    @staticmethod
+    def stockfish(board:chess.Board, depth) -> float:
+        """Stockfish evaluator"""
+        with chess.engine.SimpleEngine.popen_uci('./content/stockfish.exe') as sf:
+            result = sf.analyse(board, chess.engine.Limit(depth=depth))
+            score = result['score'].white().score()
+            if score == None:
+                print("none.." + board.fen())
+                return 0
+            return score
 
 
 #No neural net eval

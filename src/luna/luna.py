@@ -8,6 +8,8 @@ from .luna_state import LunaState
 from .luna_constants import SEARCH_DEPTH
 import time
 import chess
+import chess.engine
+import random
 
 class Luna():
     """Luna_chess engine main class"""
@@ -30,7 +32,7 @@ class Luna():
         
         # get all legal moves from the current position for the current player
         turn = s.board.turn
-        legal_moves = [move for move in s.board.legal_moves if s.board.piece_at(move.from_square).color == turn]
+        legal_moves = s.board.legal_moves
         
         if root:
             eval_tuple_list = []
@@ -110,6 +112,21 @@ class Luna():
 
         # make move        
         s.board.push(chosen_move)
+
+    def random_board(self, max_depth=200) -> chess.Board:
+        """Generate a random board position"""
+        board = chess.Board()
+        depth = random.randrange(0, max_depth)
+        
+        for _ in range(depth):
+            all_moves = list(board.legal_moves)
+            random_move = random.choice(all_moves)
+            board.push(random_move)
+            
+            if board.is_game_over():
+                break
+        
+        return board
 
     def new_game(self) -> None:
         """New game"""

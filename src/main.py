@@ -18,11 +18,13 @@ import sys
 
 def main() -> int:
     """Entry Point"""
-    #le = LunaEval(True)
-    #s = LunaState(chess.Board())
-    #print("PRED", le(s))
-    ln = luna_NN.LunaNN()
-    print(ln)
+    luna_engine = Luna(verbose=True)
+    while 1:
+        board = luna_engine.random_board(200)
+        #print(board)
+        #print(board.fen())
+        a = luna_engine.luna_eval.stockfish(board, 0)
+
     return 0
 
 

@@ -47,6 +47,11 @@ class LunaDataset(Dataset):
         """Save dataset"""
         np.savez(self.dataset_full_path, self.X, self.Y)
 
+    def generate_stockfish_dataset(self, depth=0):
+        """Generate dataset with eval Y instead of result Y, using stockfish eval"""
+        
+
+
     def generate_dataset(self):
         """Generate dataset of N(num_samples)
             The dataset includes the board serialization(X)

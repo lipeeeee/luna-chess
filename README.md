@@ -63,6 +63,17 @@ Wrapper(either html or anything else) ->
             Luna_NN ->
             Luna_dataset ->
 ```
+
+## Evaluating position
+```python
+import luna
+
+luna_engine = Luna()
+board = chess.Board()
+
+evaluation = luna_engine.luna_eval(board)
+```
+
 ## Self-Play
 I also implemented a feature to Luna that allows her to play with itself 
   
@@ -92,5 +103,8 @@ make web
 TODO
 ------
 
+stockfish 0 depth dataset~
+ better serialize
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves
+3. combine Alpha beta pruning w, transposition tables, quiescence search, and iterative deepening 

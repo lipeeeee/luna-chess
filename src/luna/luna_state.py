@@ -122,6 +122,16 @@ class LunaState():
 
         return state
 
+    @staticmethod
+    def better_serialize_board(board: chess.Board) -> None:
+        """Exploration of new serialization techniques
+            1. The board binary piece position(a matrix for each piece of each color)
+            2. 2 extra matrices for attacked squares for each color
+        """
+        
+
+
+
     def edges(self):
         """Self-Explanatory..."""
         return list(self.board.legal_moves)
