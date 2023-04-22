@@ -7,7 +7,8 @@ import chess.pgn
 import numpy as np
 from torch.utils.data import Dataset
 from .luna_state import LunaState
-from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOLDER, LUNA_DATASET_PREFIX, INPUT_PAWN_STRUCTURE
+from .luna_constants import LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER, LUNA_DATASET_FOLDER, LUNA_DATASET_PREFIX
+from .luna_utils import *
 
 class LunaDataset(Dataset):
     """Dataset builder for Luna"""
@@ -23,8 +24,8 @@ class LunaDataset(Dataset):
             if verbose: print(f"[DATASET] Dataset found at: {self.dataset_full_path}, loading...")
             self.load()
         else:
-            if verbose: print(f"[DATASET] NO DATABASE, GENERATING AT: {self.dataset_full_path} | WITH PAWN STRUCT:{INPUT_PAWN_STRUCTURE}...")
-            self.X, self.Y = self.generate_dataset()
+            if verbose: print(f"[DATASET] NO DATABASE, GENERATING AT: {self.dataset_full_path}")
+            self.X, self.Y = self.generate_stockfish_dataset()
             
             if self.verbose: print(f"[DATASET] Saving dataset at: {self.dataset_full_path}...")
             self.save()
@@ -47,11 +48,53 @@ class LunaDataset(Dataset):
         """Save dataset"""
         np.savez(self.dataset_full_path, self.X, self.Y)
 
-    def generate_stockfish_dataset(self, depth=0):
+    # 5M Samples took: 8:30h -> ..
+    # around 25minutes for each M 
+    def generate_stockfish_dataset(self, stockfish_depth=0):
         """Generate dataset with eval Y instead of result Y, using stockfish eval"""
         X, Y = [], []
 
+        init_stockfish()
 
+        num_games = 0
+        data_folder = os.path.join(LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER)
+        for fn in os.listdir(data_folder):
+            pgn = open(os.path.join(data_folder, fn))
+            
+            # On a pgn file, read all games until none found
+            while True:
+                # Read Game
+                game = chess.pgn.read_game(pgn)
+                if game is None:
+                    break
+
+                # Append moves and result to vectors
+                board = game.board()
+                 
+ 
+                for i, move in enumerate(game.mainline_moves()):
+                    board.push(move)
+                    ser = LunaState.serialize_board(board)
+                    
+                    sf_value = stockfish(board, stockfish_depth)
+                    if not isinstance(sf_value, int):
+                       continue
+
+                    X.append(ser)
+                    Y.append(sf_value)
+                
+                # Verbose
+                if self.verbose: 
+                    print(f"[DATASET] Parsing game {num_games}, got {len(X)} examples")
+                    num_games += 1
+
+                # Check if we are over than the requested number of dataset samples
+                if self.num_samples is not None and len(X) > self.num_samples:
+                    X = np.array(X)
+                    Y = np.array(Y)
+                    return X, Y
+
+        close_stockfish()
 
         X = np.array(X)
         Y = np.array(Y)
@@ -88,10 +131,7 @@ class LunaDataset(Dataset):
                 board = game.board()
                 for i, move in enumerate(game.mainline_moves()):
                     board.push(move)
-                    if INPUT_PAWN_STRUCTURE:
-                        ser = LunaState.serialize_board(board)
-                    else:
-                        ser = LunaState.no_pawn_serialize_board(board)
+                    ser = LunaState.serialize_board(board)
                          
                     X.append(ser)
                     Y.append(res_value)
