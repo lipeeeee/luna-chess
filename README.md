@@ -45,6 +45,8 @@ LunaNN(
 ## Board Serialization
 ...
 
+## Luna vs Stockfish
+...
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
@@ -124,6 +126,7 @@ Overall, providing the history of moves as input to a neural network-based chess
 
 the player to move, castling rights, and en passant possibility.
 
+improve pgn quality
 
 Castling rights: This is a binary feature that indicates whether each player can still castle on either side of the board.
 

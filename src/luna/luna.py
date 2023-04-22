@@ -2,7 +2,6 @@
     Luna-Chess main logic
 """
 
-from .luna_NN import LunaNN
 from .luna_eval import LunaEval, MAXVAL
 from .luna_state import LunaState
 from .luna_constants import SEARCH_DEPTH

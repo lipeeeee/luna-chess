@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, INPUT_PAWN_STRUCTURE, CUDA
+from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, CUDA
 from .luna_dataset import LunaDataset
 
 # Note: Training only has a CUDA implementation
@@ -57,12 +57,42 @@ class LunaNN(nn.Module):
 
     def define(self) -> None:
         """Define neural net"""
-        # 5 -> 6
-        if INPUT_PAWN_STRUCTURE:
-            self.a1 = nn.Conv2d(6, 16, kernel_size=3, padding=1)
-        else:
-            self.a1 = nn.Conv2d(5, 16, kernel_size=3, padding=1)
+        # input
+        self.conv1 = nn.Conv2d(15, 32, kernel_size=3, padding=1)
 
+        # hidden
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.fc1 = nn.Linear(256 * 2 * 2, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 128)
+        
+        # output
+        self.fc4 = nn.Linear(128, 1)
+
+    def forward(self, x:torch.Tensor):
+        """Forward prop"""
+        x = F.relu(self.conv1(x))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = F.relu(self.conv3(x))
+        x = self.pool(F.relu(self.conv4(x)))
+        
+        x = x.view(-1, 256 * 2 * 2)
+        
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        
+        x = self.fc4(x)
+        return x
+
+    def old_define(self) -> None:
+        """Define neural net"""
+        self.a1 = nn.Conv2d(15, 16, kernel_size=3, padding=1)
         self.a2 = nn.Conv2d(16, 16, kernel_size=3, padding=1)
         self.a3 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
 
@@ -80,7 +110,7 @@ class LunaNN(nn.Module):
 
         self.last = nn.Linear(128, 1)
 
-    def forward(self, x: torch.Tensor):
+    def old_forward(self, x: torch.Tensor):
         """Forward prop implementation"""
         x = F.relu(self.a1(x))
         x = F.relu(self.a2(x))

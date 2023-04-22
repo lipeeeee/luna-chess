@@ -8,12 +8,12 @@ import chess.engine
 import chess.pgn
 from .luna_state import LunaState
 from .luna_NN import LunaNN
-from .luna_constants import INPUT_PAWN_STRUCTURE, CUDA
+from .luna_constants import CUDA
 import torch
 
 MAXVAL = 100000
 class LunaEval():
-    """Luna-Chess trained position evaluator(1 = white win, 0 = draw, -1 = black win)"""
+    """Luna-Chess trained position evaluator()"""
     
     def __init__(self, verbose=False) -> None:
         self.model = LunaNN(verbose=verbose, epochs=100, save_after_each_epoch=True)
@@ -22,10 +22,7 @@ class LunaEval():
 
     def __call__(self, s:LunaState) -> float:
         """override object call to make it so we can evaluate positions by: LunaEval(state) -> float"""
-        if INPUT_PAWN_STRUCTURE:
-            brd = LunaState.serialize_board(s.board)
-        else:
-            brd = LunaState.no_pawn_serialize_board(s.board)
+        brd = LunaState.serialize_board(s.board)
 
         output = self.model(torch.tensor(brd, device="cuda").float())
         self.count += 1
@@ -34,17 +31,6 @@ class LunaEval():
     def reset(self) -> None:
         """Eval Counter, for printing purposes"""
         self.count = 0
-
-    @staticmethod
-    def stockfish(board:chess.Board, depth) -> float:
-        """Stockfish evaluator"""
-        with chess.engine.SimpleEngine.popen_uci('./content/stockfish.exe') as sf:
-            result = sf.analyse(board, chess.engine.Limit(depth=depth))
-            score = result['score'].white().score()
-            if score == None:
-                print("none.." + board.fen())
-                return 0
-            return score
 
 
 #No neural net eval

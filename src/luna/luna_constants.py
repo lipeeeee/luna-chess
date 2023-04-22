@@ -8,12 +8,9 @@ LUNA_MODEL_FOLDER = "networks"
 LUNA_DATASET_FOLDER = "processed" 
 LUNA_DATASET_PREFIX = "luna_dataset_" # + number + ".npz"
 
-CURRENT_MODEL = "infinite_luna.pth"
+CURRENT_MODEL = "serialize_stockfish_refacto.pth"
 NUM_SAMPLES = 5_000_000
-
-# This just warns the model about if the input will get a pawn struct
-INPUT_PAWN_STRUCTURE = False
 
 CUDA = True
 
-SEARCH_DEPTH = 4 # 5 takes too long and 4 is good enough
+SEARCH_DEPTH = 3 # 5 takes too long and 4 is good enough

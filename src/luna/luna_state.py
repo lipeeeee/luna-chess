@@ -3,7 +3,6 @@
 """
 
 import chess
-from chess import Move
 import numpy as np
 
 class LunaState(): 
@@ -20,7 +19,7 @@ class LunaState():
         return (self.board.board_fen(), self.board.turn, self.board.castling_rights, self.board.ep_square)
     
     @staticmethod
-    def serialize_board(board: chess.Board):
+    def old_serialize_board(board: chess.Board):
         """Serialize a chess board into a NN readable format
             1. Encode board
             2. Encode pawn structure(-1 for black 1 for white 0 for none)
@@ -124,11 +123,12 @@ class LunaState():
 
     # There is an infinite room for improvement...
     @staticmethod
-    def better_serialize_board(board: chess.Board) -> None:
+    def serialize_board(board: chess.Board) -> None:
         """Exploration of new serialization techniques
-            1. The board binary piece position(a matrix for each piece of each color)
-            2. 2 extra matrices for attacked squares for each color
-            note: this function can be very boptimized by using arrays of structs
+            input_shape: (15, 8, 8)
+
+            bitmaps for pawn, bishop, knight, rook, queen, king, attacking squares for each color(7x2=14)
+            bitmap for turn(14+1=15)
         """
         assert board.is_valid()
 
