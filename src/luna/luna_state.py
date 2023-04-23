@@ -19,7 +19,7 @@ class LunaState():
         return (self.board.board_fen(), self.board.turn, self.board.castling_rights, self.board.ep_square)
     
     @staticmethod
-    def old_serialize_board(board: chess.Board):
+    def first_serialize_board(board: chess.Board):
         """Serialize a chess board into a NN readable format
             1. Encode board
             2. Encode pawn structure(-1 for black 1 for white 0 for none)

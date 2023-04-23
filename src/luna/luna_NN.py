@@ -25,6 +25,7 @@ class LunaNN(nn.Module):
         self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.loss = nn.MSELoss()
+        self.batch_size = 256
         self.epochs = epochs
         self.save_after_each_epoch = save_after_each_epoch
         
@@ -42,7 +43,7 @@ class LunaNN(nn.Module):
             # Dataset Initialazation
             if verbose: print(f"[DATASET] Initializing dataset...")
             self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
-            self.train_loader = DataLoader(self.dataset, batch_size=256, shuffle=True)        
+            self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
         
         # Check if existing model
         if self.model_exists():
@@ -56,6 +57,46 @@ class LunaNN(nn.Module):
             self.save()
 
     def define(self) -> None:
+        """Define neural net"""
+        
+        # input
+        self.conv1 = nn.Conv2d(15, 32, kernel_size=3, padding=1)
+
+        # hidden
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=1)
+
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.fc1 = nn.Linear(1024 * 2 * 2, 2048)
+        #self.dropout1 = nn.Dropout(0.2)
+        self.fc2 = nn.Linear(2048, 1024)
+        #self.dropout2 = nn.Dropout(0.2)
+        self.fc3 = nn.Linear(1024, 512)
+        #self.dropout3 = nn.Dropout(0.2)
+        self.fc4 = nn.Linear(512, 1)
+
+    def forward(self, x: torch.Tensor):
+        x = F.relu(self.conv1(x))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = self.pool(F.relu(self.conv4(x)))
+        x = self.pool(F.relu(self.conv5(x)))
+        x = self.pool(F.relu(self.conv6(x)))
+
+        x = x.view(-1, 1024 * 2 * 2)
+
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
+
+        return x
+
+    def old_define(self) -> None:
         """Define neural net"""
         # input
         self.conv1 = nn.Conv2d(15, 32, kernel_size=3, padding=1)
@@ -74,7 +115,7 @@ class LunaNN(nn.Module):
         # output
         self.fc4 = nn.Linear(128, 1)
 
-    def forward(self, x:torch.Tensor):
+    def old_forward(self, x:torch.Tensor):
         """Forward prop"""
         x = F.relu(self.conv1(x))
         x = self.pool(F.relu(self.conv2(x)))

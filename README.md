@@ -110,7 +110,6 @@ make web
 TODO
 ------
 
-stockfish 0 depth dataset~
  better serialize, even ebtter!!!
  Legal moves: The set of legal moves that are available to the player at the current board state.
 
@@ -141,6 +140,27 @@ Material count: This is a set of integer features that indicates the total value
 Threats: This is a set of binary features that indicates which squares on the board are currently being threatened by each player's pieces.
 
 Mobility: This is a set of integer features that indicates the number of legal moves that each player can make on their turn.
+
+
+Material count: The total value of all the pieces on the board.
+
+Piece mobility: The number of squares each piece can move to on the board.
+
+King safety: How exposed the king is to threats, such as the number of attacking pieces and the number of squares the king can move to.
+
+Pawn structure: The arrangement of the pawns on the board, including isolated pawns, doubled pawns, and pawn chains.
+
+Control of the center: The number of pieces that control the central squares of the board.
+
+Development: The number of pieces that have been moved from their starting position.
+
+Space control: The number of squares controlled by each player.
+
+Tempo: The number of moves a player has made compared to their opponent.
+
+Piece placement: The location of each piece on the board and how well it is placed for potential future moves.
+
+Threats: The number of threats each player has on the board.
 
 1. implement Luna in a webserver(such as firebase)
 2. Add a bit of randomness when it comes to computer moves

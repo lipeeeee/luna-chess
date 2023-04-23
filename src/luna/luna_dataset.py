@@ -70,7 +70,6 @@ class LunaDataset(Dataset):
 
                 # Append moves and result to vectors
                 board = game.board()
-                 
  
                 for i, move in enumerate(game.mainline_moves()):
                     board.push(move)
