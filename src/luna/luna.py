@@ -112,7 +112,8 @@ class Luna():
         # make move        
         s.board.push(chosen_move)
 
-    def random_board(self, max_depth=200) -> chess.Board:
+    @staticmethod
+    def random_board(max_depth=200) -> chess.Board:
         """Generate a random board position"""
         board = chess.Board()
         depth = random.randrange(0, max_depth)

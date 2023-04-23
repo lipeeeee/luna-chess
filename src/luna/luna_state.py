@@ -125,10 +125,13 @@ class LunaState():
     @staticmethod
     def serialize_board(board: chess.Board) -> None:
         """Exploration of new serialization techniques
-            input_shape: (15, 8, 8)
+            input_shape: (17, 8, 8)
 
-            bitmaps for pawn, bishop, knight, rook, queen, king, attacking squares for each color(7x2=14)
-            bitmap for turn(14+1=15)
+            - bitmaps for pawn, bishop, knight, rook, queen, king, material_count, 
+            attacking squares for each color(8x2=16)
+        
+            - bitmap for turn(+1)
+            - bitmap for mat diff(+1)
         """
         assert board.is_valid()
 
@@ -140,6 +143,7 @@ class LunaState():
         white_queen_structure = np.zeros(64, np.uint8)
         white_king_structure = np.zeros(64, np.uint8)
         white_attack_structure = np.zeros(64, np.uint8)
+        white_mat_count = 0
 
         black_pawn_structure = np.zeros(64, np.uint8)
         black_bishop_structure = np.zeros(64, np.uint8)
@@ -148,6 +152,7 @@ class LunaState():
         black_queen_structure = np.zeros(64, np.uint8)
         black_king_structure = np.zeros(64, np.uint8)
         black_attack_structure = np.zeros(64, np.uint8)
+        black_mat_count = 0
 
         # board loop
         for i in range(64):
@@ -157,27 +162,37 @@ class LunaState():
                 #white
                 if pp.symbol() == 'P':
                     white_pawn_structure[i] = 1
+                    white_mat_count += 1
                 elif pp.symbol() == 'B':
                     white_bishop_structure[i] = 1
+                    white_mat_count += 3
                 elif pp.symbol() == 'N':
                     white_knight_structure[i] = 1
+                    white_mat_count += 3
                 elif pp.symbol() == "R":
                     white_rook_structure[i] = 1
+                    white_mat_count += 5
                 elif pp.symbol() == 'Q':
                     white_queen_structure[i] = 1
+                    white_mat_count += 9
                 elif pp.symbol() == 'K':
                     white_king_structure[i] = 1
                 #black
                 elif pp.symbol() == 'p':
                     black_pawn_structure[i] = 1
+                    black_mat_count += 1
                 elif pp.symbol() == 'b':
                     black_bishop_structure[i] = 1
+                    black_mat_count += 3
                 elif pp.symbol() == 'n':
                     black_knight_structure[i] = 1
+                    black_mat_count += 3
                 elif pp.symbol() == 'r':
                     black_rook_structure[i] = 1
+                    black_mat_count += 5
                 elif pp.symbol() == 'q':
                     black_queen_structure[i] = 1
+                    black_mat_count += 9
                 elif pp.symbol() == 'k':
                     black_king_structure[i] = 1
                 
@@ -205,30 +220,45 @@ class LunaState():
         black_attack_structure = black_attack_structure.reshape(8, 8)
 
         # mix them all up        
-        state = np.zeros((15, 8, 8), np.uint8)
+        state = np.zeros((23, 8, 8), np.float32)
         
+        # turn 
+        state[0] = (board.turn*1.0)
+            
         # White positional features
-        state[0] = white_pawn_structure
-        state[1] = white_bishop_structure
-        state[2] = white_knight_structure
-        state[3] = white_rook_structure
-        state[4] = white_queen_structure
-        state[5] = white_king_structure
-        
+        state[1] = white_pawn_structure
+        state[2] = white_bishop_structure
+        state[3] = white_knight_structure
+        state[4] = white_rook_structure
+        state[5] = white_queen_structure
+        state[6] = white_king_structure
+        # aditional white features
+        state[7] = white_attack_structure
+        state[8] = (white_mat_count * 1.0)
+        state[9] = (board.has_kingside_castling_rights(chess.WHITE) * 1.0)
+        state[10] = (board.has_queenside_castling_rights(chess.WHITE) * 1.0)
+
         # Black positional features
-        state[6] = black_pawn_structure
-        state[7] = black_bishop_structure
-        state[8] = black_knight_structure
-        state[9] = black_rook_structure
-        state[10] = black_queen_structure
-        state[11] = black_king_structure
+        state[11] = black_pawn_structure
+        state[12] = black_bishop_structure
+        state[13] = black_knight_structure
+        state[14] = black_rook_structure
+        state[15] = black_queen_structure
+        state[16] = black_king_structure
+        # aditional black features
+        state[17] = black_attack_structure
+        state[18] = (black_mat_count * 1.0)
+        state[19] = (board.has_kingside_castling_rights(chess.BLACK) * 1.0)
+        state[20] = (board.has_queenside_castling_rights(chess.BLACK) * 1.0)
 
-        # What white and black are attacking
-        state[12] = white_attack_structure
-        state[13] = black_attack_structure
-
-        # turn
-        state[14] = (board.turn*1.0)
+        # raw mat count diff from -1 to 1
+        if white_mat_count == black_mat_count:
+            state[21] = 0.0
+        else:
+            state[21] = ((white_mat_count - black_mat_count) / (white_mat_count + black_mat_count))
+        
+        # move count in ply
+        state[22] = (board.ply() * 1.0)
 
         return state
 
