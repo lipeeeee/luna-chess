@@ -57,6 +57,68 @@ class LunaNN(nn.Module):
             self.save()
 
     def define(self) -> None:
+        """Define Net"""
+
+        # input
+        self.conv1 = nn.Conv2d(24, 32, kernel_size=3, padding=1)
+
+        # hidden
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=5, padding=2)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=5, padding=2)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 256, kernel_size=5, padding=2)
+        self.bn4 = nn.BatchNorm2d(256)
+        self.conv5 = nn.Conv2d(256, 512, kernel_size=5, padding=2)
+        self.bn5 = nn.BatchNorm2d(512)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=5, padding=2)
+        self.bn6 = nn.BatchNorm2d(1024)
+
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.fc1 = nn.Linear(1024 * 2 * 2, 2048)
+        self.bn7 = nn.BatchNorm1d(2048)
+        self.dropout1 = nn.Dropout(0.2)
+        self.fc2 = nn.Linear(2048, 1024)
+        self.bn8 = nn.BatchNorm1d(1024)
+        self.dropout2 = nn.Dropout(0.2)
+        self.fc3 = nn.Linear(1024, 512)
+        self.bn9 = nn.BatchNorm1d(512)
+        self.dropout3 = nn.Dropout(0.2)
+        self.fc4 = nn.Linear(512, 1)
+
+        self.shortcut2 = nn.Conv2d(32, 64, kernel_size=1, stride=1)
+        self.shortcut3 = nn.Conv2d(64, 128, kernel_size=1, stride=1)
+        self.shortcut4 = nn.Conv2d(128, 256, kernel_size=1, stride=1)
+        self.shortcut5 = nn.Conv2d(256, 512, kernel_size=1, stride=1)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+
+        shortcut2 = self.shortcut2(x)
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x) + shortcut2))
+        
+        shortcut3 = self.shortcut3(x)
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x) + shortcut3))
+        
+        shortcut4 = self.shortcut4(x)
+        x = F.relu(self.bn6(self.conv6(x)))
+        x = F.relu(self.pool(self.bn5(self.conv5(x) + shortcut4)))
+        
+        x = x.view(-1, 1024 * 2 * 2)
+        x = F.relu(self.bn7(self.fc1(x)))
+        x = self.dropout1(x)
+        x = F.relu(self.bn8(self.fc2(x)))
+        x = self.dropout2(x)
+        x = F.relu(self.bn9(self.fc3(x)))
+        x = self.dropout3(x)
+        x = self.fc4(x)
+
+        return x
+
+    def decent_define(self) -> None:
         """Define neural net"""
         
         # input
@@ -79,7 +141,7 @@ class LunaNN(nn.Module):
         #self.dropout3 = nn.Dropout(0.2)
         self.fc4 = nn.Linear(512, 1)
 
-    def forward(self, x: torch.Tensor):
+    def decent_forward(self, x: torch.Tensor):
         x = F.relu(self.conv1(x))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
@@ -237,7 +299,7 @@ class LunaNN(nn.Module):
 
             print("EPOCH [%3d]: %f" % (epoch, all_loss/num_loss))
             if save_after_each_epoch: self.save()
-    
+
     def model_exists(self) -> bool:
         """Checks if there is a pre-saved model"""
         return os.path.exists(self.model_path)

@@ -46,10 +46,10 @@ class LunaDataset(Dataset):
 
     def save(self) -> None:
         """Save dataset"""
-        np.savez(self.dataset_full_path, self.X, self.Y)
+        np.savez(self.dataset_full_path, self.X, self.Y, mmap_mode="r+")
 
-    # 5M Samples took: 8:30h -> ..
-    # around 25minutes for each M 
+    # 5M Samples took: 2h10m 
+    # 178_571 Samples is 1GiB
     def generate_stockfish_dataset(self, stockfish_depth=0):
         """Generate dataset with eval Y instead of result Y, using stockfish eval"""
         X, Y = [], []

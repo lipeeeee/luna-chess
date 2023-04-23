@@ -112,6 +112,14 @@ class Luna():
         # make move        
         s.board.push(chosen_move)
 
+    def visualize_net(self) -> None:
+        """Visual representation of the network"""
+        import torchviz
+        state = LunaState()
+        y = self.luna_eval(state)
+        
+        torchviz.make_dot(y, params=dict(self.luna_eval.model.named_parameters()))
+
     @staticmethod
     def random_board(max_depth=200) -> chess.Board:
         """Generate a random board position"""

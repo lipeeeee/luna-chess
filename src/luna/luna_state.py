@@ -125,13 +125,17 @@ class LunaState():
     @staticmethod
     def serialize_board(board: chess.Board) -> None:
         """Exploration of new serialization techniques
-            input_shape: (17, 8, 8)
-
-            - bitmaps for pawn, bishop, knight, rook, queen, king, material_count, 
-            attacking squares for each color(8x2=16)
-        
-            - bitmap for turn(+1)
-            - bitmap for mat diff(+1)
+            input_shape: (24, 8, 8)
+            
+            - pieces bitmap for each color(+6*2) = 12
+            - material count for each color(+2) = 14
+            - attacking squares for each color(+2) = 16
+            - queen and kingside castling rights for each color(+4) = 20  
+            - turn(+1) = 21
+            - mat diff(+1) = 22 
+            - move count(+1) = 23
+            - en passant square(+1) = 24
+            #TODO: move stack?
         """
         assert board.is_valid()
 
@@ -220,7 +224,7 @@ class LunaState():
         black_attack_structure = black_attack_structure.reshape(8, 8)
 
         # mix them all up        
-        state = np.zeros((23, 8, 8), np.float32)
+        state = np.zeros((24, 8, 8), np.float32)
         
         # turn 
         state[0] = (board.turn*1.0)
@@ -259,6 +263,12 @@ class LunaState():
         
         # move count in ply
         state[22] = (board.ply() * 1.0)
+
+        # en passant square in float
+        if board.ep_square is None:
+            state[23] = 0.0
+        else:
+            state[23] = board.ep_square 
 
         return state
 
