@@ -12,14 +12,17 @@ from .luna_utils import *
 
 class LunaDataset(Dataset):
     """Dataset builder for Luna"""
-   
-    def __init__(self, num_samples, verbose=False) -> None:
+    
+    def __init__(self, num_samples: int, verbose=False) -> None:
         self.num_samples = num_samples
         self.verbose = verbose
         
+        # Main dataset folder
         self.dataset_folder = os.path.join(LUNA_MAIN_FOLDER, LUNA_DATASET_FOLDER)
+        # specific dataset path given num_samples
         self.dataset_full_path = os.path.join(self.dataset_folder, LUNA_DATASET_PREFIX + str(self.num_samples) + ".npz")
         
+        # if there is a dataset we load it, if not we generate one and save it
         if self.dataset_exists():
             if verbose: print(f"[DATASET] Dataset found at: {self.dataset_full_path}, loading...")
             self.load()
@@ -30,10 +33,15 @@ class LunaDataset(Dataset):
             if self.verbose: print(f"[DATASET] Saving dataset at: {self.dataset_full_path}...")
             self.save()
 
+            if self.verbose: print(f"[DATASET] Loading dataset at: {self.dataset_full_path}...")
+            self.load()
+
     def __len__(self) -> int:
+        """Pytorch Dataset.len override"""
         return self.X.shape[0]
 
     def __getitem__(self, index) -> tuple:
+        """Pytorch Dataset.getitem override"""
         return (self.X[index], self.Y[index])
 
     def load(self) -> None:
@@ -45,36 +53,42 @@ class LunaDataset(Dataset):
         self.Y = dat['arr_1']
 
     def save(self) -> None:
-        """Save dataset"""
-        np.savez(self.dataset_full_path, self.X, self.Y, mmap_mode="r+")
+        """Save dataset to disk"""
+        np.savez(self.dataset_full_path, self.X, self.Y)
 
     # 5M Samples took: 2h10m 
     # 178_571 Samples is 1GiB
     def generate_stockfish_dataset(self, stockfish_depth=0):
-        """Generate dataset with eval Y instead of result Y, using stockfish eval"""
+        """Generate dataset with:
+            X: Board serialization
+            Y: Stockfish eval(depth 0 default)"""
+        
         X, Y = [], []
+        num_games = 0
 
+        # Initialize stockfish .exe process
         init_stockfish()
 
-        num_games = 0
+        # Loop through every pgn file in main data folder until num_samples is met
         data_folder = os.path.join(LUNA_MAIN_FOLDER, LUNA_DATA_FOLDER)
         for fn in os.listdir(data_folder):
             pgn = open(os.path.join(data_folder, fn))
             
             # On a pgn file, read all games until none found
             while True:
-                # Read Game
+                # Read game
                 game = chess.pgn.read_game(pgn)
                 if game is None:
                     break
-
-                # Append moves and result to vectors
                 board = game.board()
  
+                # Read moves
                 for i, move in enumerate(game.mainline_moves()):
+                    # X: Serialize board
                     board.push(move)
                     ser = LunaState.serialize_board(board)
                     
+                    # Y: Stockfish eval
                     sf_value = stockfish(board, stockfish_depth)
                     if not isinstance(sf_value, int):
                        continue
@@ -87,19 +101,20 @@ class LunaDataset(Dataset):
                     print(f"[DATASET] Parsing game {num_games}, got {len(X)} examples")
                     num_games += 1
 
-                # Check if we are over than the requested number of dataset samples
+                # Stop condition 
                 if self.num_samples is not None and len(X) > self.num_samples:
                     X = np.array(X)
                     Y = np.array(Y)
                     return X, Y
 
+        # Close stockfish .exe process
         close_stockfish()
 
         X = np.array(X)
         Y = np.array(Y)
         return X, Y
 
-    def generate_dataset(self):
+    def old_generate_dataset(self):
         """Generate dataset of N(num_samples)
             The dataset includes the board serialization(X)
             and the result of the match(Y)

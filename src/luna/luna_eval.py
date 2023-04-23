@@ -1,6 +1,9 @@
 """
     Basically the "Brain" of luna,
-    LunaEval to evaluate a certain board position
+    LunaEval to evaluate a certain board position,
+    
+    this could potentially be moved somewhere else such as LunaNN but 
+    this is a more correct approach
 """
 
 import chess
@@ -8,7 +11,6 @@ import chess.engine
 import chess.pgn
 from .luna_state import LunaState
 from .luna_NN import LunaNN
-from .luna_constants import CUDA
 import torch
 
 MAXVAL = 100000
@@ -18,6 +20,7 @@ class LunaEval():
     def __init__(self, verbose=False) -> None:
         self.model = LunaNN(verbose=verbose, epochs=100, save_after_each_epoch=True)
         assert self.model.model_exists()
+        
         self.reset()
 
     def __call__(self, s:LunaState) -> float:
@@ -26,6 +29,7 @@ class LunaEval():
 
         output = self.model(torch.tensor(brd, device="cuda").float())
         self.count += 1
+        
         return float(output.data[0][0])
 
     def reset(self) -> None:

@@ -37,20 +37,20 @@ class LunaNN(nn.Module):
         
         self.model_file = model_file # .pt file(ex: main_luna.pt)
         self.model_path = os.path.join(LUNA_MAIN_FOLDER, LUNA_MODEL_FOLDER, model_file)
-
-        # if there isnt a model generate dataset
-        if not self.model_exists():
-            # Dataset Initialazation
-            if verbose: print(f"[DATASET] Initializing dataset...")
-            self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
-            self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
-        
+ 
         # Check if existing model
         if self.model_exists():
             if verbose: print(f"[NEURAL NET] Found existing model at: {self.model_path}, loading...")
             self.load()
-        else:
+        else:            
             if verbose: print(f"[NEURAL NET] NO EXISTING NEURAL NET AT: {self.model_path}, Training new neural network...")
+
+            # Dataset Initialazation
+            if verbose: print(f"[DATASET] Initializing dataset...")
+            self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
+            self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
+
+            if verbose: print(f"[DATASET] Training model...")
             self._train(epochs=self.epochs, save_after_each_epoch=self.save_after_each_epoch)
 
             if verbose: print(f"[NEURAL NET] FINISHED TRAINING, SAVING...")
@@ -58,7 +58,6 @@ class LunaNN(nn.Module):
 
     def define(self) -> None:
         """Define Net"""
-
         # input
         self.conv1 = nn.Conv2d(24, 32, kernel_size=3, padding=1)
 
@@ -93,6 +92,7 @@ class LunaNN(nn.Module):
         self.shortcut5 = nn.Conv2d(256, 512, kernel_size=1, stride=1)
 
     def forward(self, x):
+        """Forward prop implementation"""
         x = F.relu(self.conv1(x))
 
         shortcut2 = self.shortcut2(x)
