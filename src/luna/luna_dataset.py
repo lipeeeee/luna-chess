@@ -56,7 +56,7 @@ class LunaDataset(Dataset):
         """Save dataset to disk"""
         np.savez(self.dataset_full_path, self.X, self.Y)
 
-    # 5M Samples took: 2h10m 
+    # Float32 -> 5M Samples took: 2h10m 
     # 178_571 Samples is 1GiB
     def generate_stockfish_dataset(self, stockfish_depth=0):
         """Generate dataset with:

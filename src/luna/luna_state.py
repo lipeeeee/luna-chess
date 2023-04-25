@@ -135,7 +135,7 @@ class LunaState():
         state[6] = white_king_structure
         # aditional white features
         state[7] = white_attack_structure
-        state[8] = (white_mat_count * 1)
+        state[8] = (white_mat_count)
         state[9] = (board.has_kingside_castling_rights(chess.WHITE) * 1)
         state[10] = (board.has_queenside_castling_rights(chess.WHITE) * 1)
 
@@ -159,7 +159,7 @@ class LunaState():
             state[21] = (white_mat_count - black_mat_count)
         
         # move count in ply
-        state[22] = (board.ply() * 1)
+        state[22] = (board.ply())
 
         # en passant square in float
         if board.ep_square is None:

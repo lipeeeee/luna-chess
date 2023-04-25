@@ -15,7 +15,7 @@ def close_stockfish() -> None:
     """Closes stockfish process"""
     # cant find close process
 
-def stockfish(board:chess.Board, depth) -> float:
+def stockfish(board:chess.Board, depth) -> int:
     """Stockfish evaluator"""
     assert sf is not None
 

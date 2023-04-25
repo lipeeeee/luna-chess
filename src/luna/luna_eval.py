@@ -23,15 +23,16 @@ class LunaEval():
         
         self.reset()
 
-    def __call__(self, s:LunaState) -> float:
-        """override object call to make it so we can evaluate positions by: LunaEval(state) -> float"""
+    def __call__(self, s:LunaState) -> int:
+        """override object call to make it so we can evaluate positions by: LunaEval(state)"""
         brd = LunaState.serialize_board(s.board)
+        
         brd = brd.reshape(1, 24, 8, 8)
 
         output = self.model(torch.tensor(brd, device="cuda").float())
         self.count += 1
         
-        return float(output.data[0][0])
+        return output.data[0][0]
 
     def reset(self) -> None:
         """Eval Counter, for printing purposes"""
