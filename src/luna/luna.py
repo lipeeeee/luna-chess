@@ -5,6 +5,7 @@
 from .luna_eval import LunaEval, MAXVAL
 from .luna_state import LunaState
 from .luna_constants import SEARCH_DEPTH
+from .luna_utils import *
 import time
 import chess
 import chess.engine
@@ -120,6 +121,38 @@ class Luna():
         
         torchviz.make_dot(y, params=dict(self.luna_eval.model.named_parameters()))
 
+    def luna_stockfish_diff(self, num_tests=1_000_000) -> int:
+        """Calculate difference in outputs between luna and stockfish"""
+        ls = LunaState(self.random_board(random.randint(10, 100)))
+        le = self.luna_eval
+        
+        diff_sum = 0
+        init_stockfish()
+        sucessful_i = 0
+        for i in range(num_tests):
+            # gen board
+            while ls.board.is_game_over():
+                ls = LunaState(self.random_board(random.randint(10, 100)))
+            
+            luna_res = le(ls)
+            sf_res = stockfish(ls.board, 0)
+            
+            if sf_res is None:
+                continue
+
+            if luna_res >= sf_res:
+                diff_sum += luna_res - sf_res
+            else:
+                diff_sum += sf_res - luna_res
+            
+            sucessful_i += 1
+
+            # verbose logic
+            if num_tests >= 1000:
+                print(f"[DIFF {i}/{num_tests}] Luna - Stockfish; diff_sum: {diff_sum}; avg: {diff_sum/sucessful_i}")
+
+        return diff_sum, (diff_sum/sucessful_i) #sum, avg
+
     @staticmethod
     def random_board(max_depth=200) -> chess.Board:
         """Generate a random board position"""
@@ -135,10 +168,6 @@ class Luna():
                 break
         
         return board
-
-    def new_game(self) -> None:
-        """New game"""
-        pass
 
     def is_game_over(self) -> bool:
         """Checks if game is over via checkmate or stalemate"""

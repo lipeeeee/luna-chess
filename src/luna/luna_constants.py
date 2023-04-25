@@ -9,7 +9,7 @@ LUNA_DATASET_FOLDER = "processed"
 LUNA_DATASET_PREFIX = "luna_dataset_" # + number + ".npz"
 
 CURRENT_MODEL = "perfect_luna_maybe_lol.pth"
-NUM_SAMPLES = 5_000_000
+NUM_SAMPLES = 2_500_000
 
 CUDA = True
 

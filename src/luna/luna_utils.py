@@ -17,6 +17,8 @@ def close_stockfish() -> None:
 
 def stockfish(board:chess.Board, depth) -> float:
     """Stockfish evaluator"""
+    assert sf is not None
+
     result = sf.analyse(board, chess.engine.Limit(depth=depth))
     score = result['score'].white().score()
     
