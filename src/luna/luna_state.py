@@ -121,10 +121,10 @@ class LunaState():
         black_attack_structure = black_attack_structure.reshape(8, 8)
 
         # mix them all up        
-        state = np.zeros((24, 8, 8), np.float32)
+        state = np.zeros((24, 8, 8), np.uint8)
         
         # turn 
-        state[0] = (board.turn*1.0)
+        state[0] = (board.turn*1)
             
         # White positional features
         state[1] = white_pawn_structure
@@ -135,9 +135,9 @@ class LunaState():
         state[6] = white_king_structure
         # aditional white features
         state[7] = white_attack_structure
-        state[8] = (white_mat_count * 1.0)
-        state[9] = (board.has_kingside_castling_rights(chess.WHITE) * 1.0)
-        state[10] = (board.has_queenside_castling_rights(chess.WHITE) * 1.0)
+        state[8] = (white_mat_count * 1)
+        state[9] = (board.has_kingside_castling_rights(chess.WHITE) * 1)
+        state[10] = (board.has_queenside_castling_rights(chess.WHITE) * 1)
 
         # Black positional features
         state[11] = black_pawn_structure
@@ -148,22 +148,22 @@ class LunaState():
         state[16] = black_king_structure
         # aditional black features
         state[17] = black_attack_structure
-        state[18] = (black_mat_count * 1.0)
-        state[19] = (board.has_kingside_castling_rights(chess.BLACK) * 1.0)
-        state[20] = (board.has_queenside_castling_rights(chess.BLACK) * 1.0)
+        state[18] = (black_mat_count * 1)
+        state[19] = (board.has_kingside_castling_rights(chess.BLACK) * 1)
+        state[20] = (board.has_queenside_castling_rights(chess.BLACK) * 1)
 
         # raw mat count diff from -1 to 1
         if white_mat_count == black_mat_count:
-            state[21] = 0.0
+            state[21] = 0
         else:
-            state[21] = ((white_mat_count - black_mat_count) / (white_mat_count + black_mat_count))
+            state[21] = (white_mat_count - black_mat_count)
         
         # move count in ply
-        state[22] = (board.ply() * 1.0)
+        state[22] = (board.ply() * 1)
 
         # en passant square in float
         if board.ep_square is None:
-            state[23] = 0.0
+            state[23] = 0
         else:
             state[23] = board.ep_square 
 
