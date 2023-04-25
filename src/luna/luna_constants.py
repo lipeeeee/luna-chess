@@ -13,4 +13,4 @@ NUM_SAMPLES = 2_500_000
 
 CUDA = True
 
-SEARCH_DEPTH = 3 # 5 takes too long and 4 is good enough
+SEARCH_DEPTH = 2 # 5 takes too long and 4 is good enough

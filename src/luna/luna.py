@@ -153,6 +153,17 @@ class Luna():
 
         return diff_sum, (diff_sum/sucessful_i) #sum, avg
 
+    def print_luna_vs_stockfish(self, times=200):
+        """Print luna vs stockfish results"""
+        init_stockfish()
+        
+        for i in range(times):
+            rnd_board = self.random_board(100)
+            print("[LUNA VS STOCKFISH "+ str(i+1) + "/" + str(times) + "]\
+luna(" + str(self.luna_eval(LunaState(rnd_board))) + ") vs stockfish(" + str(stockfish(rnd_board, 0)) +");")
+        
+        close_stockfish()
+
     @staticmethod
     def random_board(max_depth=200) -> chess.Board:
         """Generate a random board position"""

@@ -20,7 +20,7 @@ class LunaState():
 
     # There is an infinite room for improvement...
     @staticmethod
-    def serialize_board(board: chess.Board) -> None:
+    def serialize_board(board: chess.Board):
         """Exploration of new serialization techniques
             input_shape: (24, 8, 8)
             

@@ -58,7 +58,14 @@ class LunaNN(nn.Module):
             self.save()
 
     def define(self) -> None:
-        """Define Net"""
+        """Define Net
+            Net results after 35EPOCHS(14h) training:
+                -> last loss: EPOCH [ 35]: 8512.545898
+                -> avg stockfish diff: 41.17
+                -> rating: X
+                -> size: 140MB
+        """
+
         self.conv1 = nn.Conv2d(in_channels=24, out_channels=64, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu1 = nn.ReLU(inplace=True)
@@ -85,7 +92,7 @@ class LunaNN(nn.Module):
         
         self.fc3 = nn.Linear(in_features=512, out_features=1)
         
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         """Forward prop implementation"""
         x = self.conv1(x)
         x = self.bn1(x)
@@ -120,7 +127,7 @@ class LunaNN(nn.Module):
         
         return x
 
-    def decent_define(self) -> None:
+    def lite_define(self) -> None:
         """Define neural net"""
         
         # input
@@ -143,7 +150,7 @@ class LunaNN(nn.Module):
         #self.dropout3 = nn.Dropout(0.2)
         self.fc4 = nn.Linear(512, 1)
 
-    def decent_forward(self, x: torch.Tensor):
+    def lite_forward(self, x: torch.Tensor):
         x = F.relu(self.conv1(x))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
@@ -157,110 +164,6 @@ class LunaNN(nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = self.fc4(x)
-
-        return x
-
-    def old_define(self) -> None:
-        """Define neural net"""
-        # input
-        self.conv1 = nn.Conv2d(15, 32, kernel_size=3, padding=1)
-
-        # hidden
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
-
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.fc1 = nn.Linear(256 * 2 * 2, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 128)
-        
-        # output
-        self.fc4 = nn.Linear(128, 1)
-
-    def old_forward(self, x:torch.Tensor):
-        """Forward prop"""
-        x = F.relu(self.conv1(x))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = F.relu(self.conv3(x))
-        x = self.pool(F.relu(self.conv4(x)))
-        
-        x = x.view(-1, 256 * 2 * 2)
-        
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        
-        x = self.fc4(x)
-        return x
-
-    def old_define(self) -> None:
-        """Define neural net"""
-        self.a1 = nn.Conv2d(15, 16, kernel_size=3, padding=1)
-        self.a2 = nn.Conv2d(16, 16, kernel_size=3, padding=1)
-        self.a3 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
-
-        self.b1 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.b2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.b3 = nn.Conv2d(32, 64, kernel_size=3, stride=2)
-
-        self.c1 = nn.Conv2d(64, 64, kernel_size=2, padding=1)
-        self.c2 = nn.Conv2d(64, 64, kernel_size=2, padding=1)
-        self.c3 = nn.Conv2d(64, 128, kernel_size=2, stride=2)
-
-        self.d1 = nn.Conv2d(128, 128, kernel_size=1)
-        self.d2 = nn.Conv2d(128, 128, kernel_size=1)
-        self.d3 = nn.Conv2d(128, 128, kernel_size=1)
-
-        self.last = nn.Linear(128, 1)
-
-    def old_forward(self, x: torch.Tensor):
-        """Forward prop implementation"""
-        x = F.relu(self.a1(x))
-        x = F.relu(self.a2(x))
-        x = F.relu(self.a3(x))
-
-        # 4x4
-        x = F.relu(self.b1(x))
-        x = F.relu(self.b2(x))
-        x = F.relu(self.b3(x))
-
-        # 2x2
-        x = F.relu(self.c1(x))
-        x = F.relu(self.c2(x))
-        x = F.relu(self.c3(x))
-
-        # 1x128
-        x = F.relu(self.d1(x))
-        x = F.relu(self.d2(x))
-        x = F.relu(self.d3(x))
-
-        x = x.view(-1, 128)
-        x = self.last(x)
-
-        # value output
-        return torch.tanh(x)
-
-    def secondary_define(self) -> None:
-        """Secondary neural network"""
-        # Convolutional layers
-        self.conv1 = nn.Conv2d(in_channels=6, out_channels=64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-
-        # Fully connected layers
-        self.fc1 = nn.Linear(in_features=256 * 8 * 8, out_features=512)
-        self.fc2 = nn.Linear(in_features=512, out_features=1)
-
-    def secondary_forward(self, x):
-        """Secondary forward prop implementation for secondary_deifne"""
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(-1, 256 * 8 * 8)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
 
         return x
 
