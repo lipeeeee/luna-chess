@@ -48,8 +48,10 @@ My approach to the board serializaton/encoding was to make it have every feature
 | --- | --- | --- |
 | Piece Bitmaps | Bitmaps of pices from the different colors, each piece for each color(6*2=12) | (12, 8, 8) |
 | Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
-| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
-| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
+| Material | Integer value for the chess piece relative value count for each player | (2, 8, 8) |
+| Material Difference | Material difference(`White.Material - Black.Material`) | (1, 8, 8) |
+| En-Passant Square | Integer value for the en-passant square from 1-64, 0 if None | (1, 8, 8) |
+
 
 ### Float32 vs Int8
 
