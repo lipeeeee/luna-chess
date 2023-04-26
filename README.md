@@ -51,12 +51,20 @@ My approach to the board serializaton/encoding was to make it have every feature
 | Material | Integer value for the chess piece relative value count for each player | (2, 8, 8) |
 | Material Difference | Material difference(`White.Material - Black.Material`) | (1, 8, 8) |
 | En-Passant Square | Integer value for the en-passant square from 1-64, 0 if None | (1, 8, 8) |
-
+| Attacking Squares | Bitmap of attacking squares for each color | (2, 8, 8) |
+| Castling Rights | Binary features for each castling right option(kingside and queenside) for each player | (4, 8, 8) |
+| PLY | Ply move count(half-moves) | (1, 8, 8)
 
 ### Float32 vs Int8
+Choosing the datatype of the board serialization values played a big part in saving RAM, GPU computations and disk space.
+A 2.5M dataset in `float32` would take 15GiB of RAM and disk space.
+While a 5M dataset in `uint8` would take around 5GiB of RAM and disk space.
+(I only had 16GiB to work with)
+
+`float32` also brought problems such as the network not understanding the pieces bitmaps, because they were float values the network was thinking of the pieces as raw values instead of classes.
 
 ## Luna vs Stockfish
-...
+To test the efficacy of Luna's evaluation I made a few functions to compare it against stockfish
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
