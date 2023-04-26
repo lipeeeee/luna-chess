@@ -39,11 +39,19 @@ LunaNN(
 ```
 
 ## Feature engineering
-...
+This was by far the most annoying process in the building of the neural network architecture, from the board serialization data to type of data...
 
+### Board Serialization
+My approach to the board serializaton/encoding was to make it have every feature it could need about the board while not making it too complex, mainly because i didn't have the GPU or disk hardware to process complex datasets, the board was encoded in different ways, having a final shape of <b>(24, 8, 8)</b>
 
-## Board Serialization
-...
+| Feature | Description | Shape |
+| --- | --- | --- |
+| Piece Bitmaps | Bitmaps of pices from the different colors, each piece for each color(6*2=12) | (12, 8, 8) |
+| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
+| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
+| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
+
+### Float32 vs Int8
 
 ## Luna vs Stockfish
 ...
