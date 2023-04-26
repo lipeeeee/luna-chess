@@ -59,12 +59,25 @@ My approach to the board serializaton/encoding was to make it have every feature
 Choosing the datatype of the board serialization values played a big part in saving RAM, GPU computations and disk space.
 A 2.5M dataset in `float32` would take 15GiB of RAM and disk space.
 While a 5M dataset in `uint8` would take around 5GiB of RAM and disk space.
+
 (I only had 16GiB to work with)
 
 `float32` also brought problems such as the network not understanding the pieces bitmaps, because they were float values the network was thinking of the pieces as raw values instead of classes.
 
 ## Luna vs Stockfish
-To test the efficacy of Luna's evaluation I made a few functions to compare it against stockfish
+To test the efficacy of Luna's evaluation network I made a few functions to compare it against stockfish:
+
+- A
+- B
+
+Note that if you ever want to build your own Luna model and compare it to stockfish you will have to download the [stockfish binaries](https://stockfishchess.org/download/).
+
+## Self-Play
+I also implemented a feature to Luna that allows her to play with itself 
+    
+
+![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
+
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
@@ -77,6 +90,7 @@ You have acess to:
 - Luna custom board states
 - Luna dataset creation and handling
 - All constants used by Luna
+- Stockfish related functions
 - The actual engine logic, obviously
 
 ### The architecture:
@@ -89,24 +103,39 @@ Wrapper(either html or anything else) ->
             Luna_dataset ->
 ```
 
-## Evaluating position
+## Luna Usage
+A few examples of how Luna can be used.
 ```python
-import luna
+# Importing
+import Luna
 
-luna_engine = Luna()
-board = chess.Board()
-
-evaluation = luna_engine.luna_eval(board)
+# Initializing the engine
+luna_chess = Luna(verbose=True) # Verbose is advised since it outputs alot of info about what luna is doing(generating dataset, training, etc..) 
 ```
 
-## Self-Play
-I also implemented a feature to Luna that allows her to play with itself 
-  
-  
-  ![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
+### Evaluating position
+```python
+# Initialize custom Luna board state
+luna_state = LunaState()
+print(luna_state.board) # Cmd-Based visual representation of the chess board
 
+# Integer Evaluation of the board, based around stockfish's eval function
+evaluation = luna_chess.luna_eval(luna_state)
+print(evaluation)
+
+# If you want you can check the evaluation of random board states like such:
+for i in range(1000):
+  # Get random board
+  random_board = luna_engine.random_board(max_depth=200)
   
+  # LunaState with that board
+  luna_state_temp = LunaState(board=random_board)
   
+  # Evaluate random board
+  evaluation_temp = luna_chess.luna_eval(luna_state_temp)
+  print(f"{board}\nWITH EVAL:{evaluation_temp}\n")
+```
+
 ## HTML Wrapper
 To test the usablity of the Luna package I made a VERY SIMPLE **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
 
