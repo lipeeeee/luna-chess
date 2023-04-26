@@ -115,7 +115,7 @@ luna_chess = Luna(verbose=True) # Verbose is advised since it outputs alot of in
 
 ### Evaluating position
 ```python
-# Initialize custom Luna board state
+# Initialize custom Luna board state(board with starting FEN)
 luna_state = LunaState()
 print(luna_state.board) # Cmd-Based visual representation of the chess board
 
@@ -134,6 +134,30 @@ for i in range(1000):
   # Evaluate random board
   evaluation_temp = luna_chess.luna_eval(luna_state_temp)
   print(f"{board}\nWITH EVAL:{evaluation_temp}\n")
+```
+
+### Evaluate moves
+Evaluates moves using the neural network's trained evaluation function and the alpha beta pruning search algorithm. On a board, it will give us an evaluation on how good each legal move is after `luna_constants.SEARCH_DEPTH` moves.
+
+```python
+
+# Initialize custom Luna board state(board with starting FEN)
+luna_state = LunaState()
+print(luna_state.board) # Cmd-Based visual representation of the chess board
+
+# Get the evaluation of the board after each legal_move with depth of luna_constants.SEARCH_DEPTH
+eval_move_list = luna_chess.explore_leaves(luna_state)
+
+# Sorting the list according to the current player
+moves = sorted(eval_move_list, key=lambda x: x[0], reverse=luna_state.board.turn)
+        
+# Get best move from sorted moves
+best_move = move[0][1]
+
+# Top 3 moves
+print("Calculated Top 3:")        
+for i,m in enumerate(move[0:3]):
+    print(f"  {m}")
 ```
 
 ## HTML Wrapper
