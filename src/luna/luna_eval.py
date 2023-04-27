@@ -28,7 +28,7 @@ class LunaEval():
         """override object call to make it so we can evaluate positions by: LunaEval(state)"""
         brd = LunaState.serialize_board(s.board)
         
-        #brd = brd.reshape(1, 24, 8, 8)
+        brd = brd.reshape(1, 24, 8, 8)
 
         output = self.model(torch.tensor(brd, device="cuda").float())
         self.count += 1

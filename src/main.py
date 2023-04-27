@@ -22,6 +22,7 @@ def main() -> int:
     """Entry Point"""
     luna = Luna(True)
     luna.print_luna_vs_stockfish(600)
+    luna.luna_stockfish_diff(1001)
 
     return 0
 

@@ -51,7 +51,7 @@ class LunaNN(nn.Module):
             self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
             self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
 
-            if verbose: print(f"[DATASET] Training model...")
+            if verbose: print(f"[NEURAL NET] Training model...")
             self._train(epochs=self.epochs, save_after_each_epoch=self.save_after_each_epoch)
 
             if verbose: print(f"[NEURAL NET] FINISHED TRAINING, SAVING...")
@@ -59,12 +59,85 @@ class LunaNN(nn.Module):
 
     def define(self) -> None:
         """Define Net
+            Net results after 39EPOCHS(16h) training, 24m each:
+                -> last loss: EPOCH[39]: 4161.70907 in 24min
+                -> avg stockfish diff: 7.59
+                -> rating: X
+                -> size: 22MB
+        """        
+        ### Input 24, 8, 8
+        self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
+        
+        ### Hidden
+        # conv2
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(128)
+
+        # conv3
+        self.conv3 = nn.Conv2d(128, 512, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(512)
+
+        # conv4
+        self.conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(512)
+
+        # Pooling
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        # fc1
+        self.fc1 = nn.Linear(2048, 1024)
+        self.droupout1 = nn.Dropout(p=0.5)
+
+        # fc2
+        self.fc2 = nn.Linear(1024, 512) 
+        self.droupout2 = nn.Dropout(p=0.5)
+
+        # fc3
+        self.fc3 = nn.Linear(512, 256)
+
+        ### Output
+        self.last = nn.Linear(256, 1)
+
+    def forward(self, x: torch.Tensor):
+        """Forward Prop"""
+        ### Input 24, 8, 8
+        x = self.conv1(x)
+
+        ### Hidden        
+        # conv2
+        x = F.relu(self.bn2(self.conv2(x)))
+        
+        # conv3
+        x = F.relu(self.pool(self.bn3(self.conv3(x))))
+
+        # conv4
+        x = F.relu(self.pool(self.bn4(self.conv4(x))))
+
+        # reshape to fc1 (2048)    
+        x = x.view(x.size(0), -1)
+        
+        # fc1
+        x = F.relu(self.fc1(x))
+        x = self.droupout1(x)
+        
+        # fc2
+        x = F.relu(self.fc2(x))
+        x = self.droupout2(x)
+
+        # fc3
+        x = F.relu(self.fc3(x))
+
+        ### Output
+        return self.last(x)
+
+    """luna-first
+    def define(self) -> None:
+        Define Net
             Net results after 35EPOCHS(14h) training:
                 -> last loss: EPOCH [ 35]: 8512.545898
                 -> avg stockfish diff: 41.17
                 -> rating: X
-                -> size: 140MB
-        """        
+                -> size: 140MB        
         # input
         self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
         
@@ -97,7 +170,7 @@ class LunaNN(nn.Module):
         self.last = nn.Linear(256, 1)
 
     def forward(self, x: torch.Tensor):
-        """Forward Prop"""
+        Forward Prop
         #input
         x = self.conv1(x)
         
@@ -126,7 +199,9 @@ class LunaNN(nn.Module):
         x = F.relu(self.fc3(x))
 
         return self.last(x)
-    
+    """    
+
+
     def lite_define(self) -> None:
         """Define neural net"""
         
@@ -170,7 +245,7 @@ class LunaNN(nn.Module):
     def load(self) -> None:
         """Load luna from a .pth file"""
         self.load_state_dict(torch.load(self.model_path))
-        # self.eval()
+        self.eval()
 
     def save(self) -> None:
         """Save luna weights and biases and everything else into a .pt file"""

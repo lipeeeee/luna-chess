@@ -10,3 +10,7 @@ build:
 # infinite train
 train:
 	python src/train.py
+
+# mostly used for debug
+eval:
+	python src/eval.py
