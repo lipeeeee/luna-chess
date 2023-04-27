@@ -39,14 +39,45 @@ LunaNN(
 ```
 
 ## Feature engineering
-...
+This was by far the most annoying process in the building of the neural network architecture, from the board serialization data to type of data...
 
+### Board Serialization
+My approach to the board serializaton/encoding was to make it have every feature it could need about the board while not making it too complex, mainly because i didn't have the GPU or disk hardware to process complex datasets, the board was encoded in different ways, having a final shape of <b>(24, 8, 8)</b>
 
-## Board Serialization
-...
+| Feature | Description | Shape |
+| --- | --- | --- |
+| Piece Bitmaps | Bitmaps of pices from the different colors, each piece for each color(6*2=12) | (12, 8, 8) |
+| Turn | Binary feature to indicate who is playing next | (1, 8, 8) |
+| Material | Integer value for the chess piece relative value count for each player | (2, 8, 8) |
+| Material Difference | Material difference(`White.Material - Black.Material`) | (1, 8, 8) |
+| En-Passant Square | Integer value for the en-passant square from 1-64, 0 if None | (1, 8, 8) |
+| Attacking Squares | Bitmap of attacking squares for each color | (2, 8, 8) |
+| Castling Rights | Binary features for each castling right option(kingside and queenside) for each player | (4, 8, 8) |
+| PLY | Ply move count(half-moves) | (1, 8, 8)
+
+### Float32 vs Int8
+Choosing the datatype of the board serialization values played a big part in saving RAM, GPU computations and disk space.
+A 2.5M dataset in `float32` would take 15GiB of RAM and disk space.
+While a 5M dataset in `uint8` would take around 5GiB of RAM and disk space.
+
+(I only had 16GiB to work with)
+
+`float32` also brought problems such as the network not understanding the pieces bitmaps, because they were float values the network was thinking of the pieces as raw values instead of classes.
 
 ## Luna vs Stockfish
-...
+To test the efficacy of Luna's evaluation network I made a few functions to compare it against stockfish:
+
+- A
+- B
+
+Note that if you ever want to build your own Luna model and compare it to stockfish you will have to download the [stockfish binaries](https://stockfishchess.org/download/).
+
+## Self-Play
+I also implemented a feature to Luna that allows her to play with itself 
+    
+
+![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
+
 
 ## Project Architecture
 I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
@@ -59,6 +90,7 @@ You have acess to:
 - Luna custom board states
 - Luna dataset creation and handling
 - All constants used by Luna
+- Stockfish related functions
 - The actual engine logic, obviously
 
 ### The architecture:
@@ -71,24 +103,63 @@ Wrapper(either html or anything else) ->
             Luna_dataset ->
 ```
 
-## Evaluating position
+## Luna Usage
+A few examples of how Luna can be used.
 ```python
-import luna
+# Importing
+import Luna
 
-luna_engine = Luna()
-board = chess.Board()
-
-evaluation = luna_engine.luna_eval(board)
+# Initializing the engine
+luna_chess = Luna(verbose=True) # Verbose is advised since it outputs alot of info about what luna is doing(generating dataset, training, etc..) 
 ```
 
-## Self-Play
-I also implemented a feature to Luna that allows her to play with itself 
-  
-  
-  ![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
+### Evaluating position
+```python
+# Initialize custom Luna board state(board with starting FEN)
+luna_state = LunaState()
+print(luna_state.board) # Cmd-Based visual representation of the chess board
 
+# Integer Evaluation of the board, based around stockfish's eval function
+evaluation = luna_chess.luna_eval(luna_state)
+print(evaluation)
+
+# If you want you can check the evaluation of random board states like such:
+for i in range(1000):
+  # Get random board
+  random_board = luna_engine.random_board(max_depth=200)
   
+  # LunaState with that board
+  luna_state_temp = LunaState(board=random_board)
   
+  # Evaluate random board
+  evaluation_temp = luna_chess.luna_eval(luna_state_temp)
+  print(f"{board}\nWITH EVAL:{evaluation_temp}\n")
+```
+
+### Evaluate moves
+Evaluates moves using the neural network's trained evaluation function and the alpha beta pruning search algorithm. On a board, it will give us an evaluation on how good each legal move is after `luna_constants.SEARCH_DEPTH` moves.
+
+```python
+
+# Initialize custom Luna board state(board with starting FEN)
+luna_state = LunaState()
+print(luna_state.board) # Cmd-Based visual representation of the chess board
+
+# Get the evaluation of the board after each legal_move with depth of luna_constants.SEARCH_DEPTH
+eval_move_list = luna_chess.explore_leaves(luna_state)
+
+# Sorting the list according to the current player
+moves = sorted(eval_move_list, key=lambda x: x[0], reverse=luna_state.board.turn)
+        
+# Get best move from sorted moves
+best_move = move[0][1]
+
+# Top 3 moves
+print("Calculated Top 3:")        
+for i,m in enumerate(move[0:3]):
+    print(f"  {m}")
+```
+
 ## HTML Wrapper
 To test the usablity of the Luna package I made a VERY SIMPLE **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
 
