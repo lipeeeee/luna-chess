@@ -3,6 +3,7 @@
 """
 
 import os
+import time
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -22,8 +23,7 @@ class LunaNN(nn.Module):
         # Neural Net definition
         if verbose: print(f"[NEURAL NET] Initializing neural network...")
         self.define()
-        # self.lr = 1e-3
-        self.lr = 0.002
+        self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.loss = nn.MSELoss()
         self.batch_size = 256
@@ -64,69 +64,69 @@ class LunaNN(nn.Module):
                 -> avg stockfish diff: 41.17
                 -> rating: X
                 -> size: 140MB
-        """
-
-        self.conv1 = nn.Conv2d(in_channels=24, out_channels=64, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.relu1 = nn.ReLU(inplace=True)
+        """        
+        # input
+        self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
         
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        # ConvNets
+        # conv2
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm2d(128)
-        self.relu2 = nn.ReLU(inplace=True)
-        
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(256)
-        self.relu3 = nn.ReLU(inplace=True)
-        
-        self.conv4 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1)
-        self.bn4 = nn.BatchNorm2d(512)
-        self.relu4 = nn.ReLU(inplace=True)
-        
-        self.dropout = nn.Dropout(0.2)
-        
-        self.fc1 = nn.Linear(in_features=512 * 8 * 8, out_features=1024)
-        self.relu5 = nn.ReLU(inplace=True)
-        
-        self.fc2 = nn.Linear(in_features=1024, out_features=512)
-        self.relu6 = nn.ReLU(inplace=True)
-        
-        self.fc3 = nn.Linear(in_features=512, out_features=1)
-        
-    def forward(self, x: torch.Tensor):
-        """Forward prop implementation"""
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu1(x)
-        x = self.dropout(x)
-        
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu2(x)
-        x = self.dropout(x)
-        
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.relu3(x)
-        x = self.dropout(x)
-        
-        x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.relu4(x)
-        x = self.dropout(x)
-        
-        x = x.view(-1, 512 * 8 * 8)
-        x = self.fc1(x)
-        x = self.relu5(x)
-        x = self.dropout(x)
-        
-        x = self.fc2(x)
-        x = self.relu6(x)
-        x = self.dropout(x)
-        
-        x = self.fc3(x)
-        
-        return x
 
+        # conv3
+        self.conv3 = nn.Conv2d(128, 512, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(512)
+
+        # conv4
+        self.conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(512)
+
+        # Pooling
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        # Dense
+        self.fc1 = nn.Linear(2048, 1024)
+        self.droupout1 = nn.Dropout(p=0.5)
+
+        self.fc2 = nn.Linear(1024, 512) 
+        self.droupout2 = nn.Dropout(p=0.5)
+
+        self.fc3 = nn.Linear(512, 256)
+
+        # output
+        self.last = nn.Linear(256, 1)
+
+    def forward(self, x: torch.Tensor):
+        """Forward Prop"""
+        #input
+        x = self.conv1(x)
+        
+        # conv2
+        x = F.relu(self.bn2(self.conv2(x)))
+        
+        # conv3
+        x = F.relu(self.pool(self.bn3(self.conv3(x))))
+
+        # conv4
+        x = F.relu(self.pool(self.bn4(self.conv4(x))))
+
+        # reshape to fc    
+        x = x.view(x.size(0), -1)
+        
+        # Dense layers
+        # fc1
+        x = F.relu(self.fc1(x))
+        x = self.droupout1(x)
+        
+        # fc2
+        x = F.relu(self.fc2(x))
+        x = self.droupout2(x)
+
+        # fc3
+        x = F.relu(self.fc3(x))
+
+        return self.last(x)
+    
     def lite_define(self) -> None:
         """Define neural net"""
         
@@ -184,6 +184,7 @@ class LunaNN(nn.Module):
         self.train()
 
         for epoch in range(epochs):
+            epoch_clock = time.time()
             all_loss = 0
             num_loss = 0
             for batch_idx, (data, target) in enumerate(self.train_loader):
@@ -202,7 +203,8 @@ class LunaNN(nn.Module):
                 all_loss += loss.item()
                 num_loss += 1
 
-            print("EPOCH [%3d]: %f" % (epoch, all_loss/num_loss))
+            print(f"EPOCH[{epoch}]: {all_loss/num_loss} in {(time.time() - epoch_clock)/60}min")
+
             if save_after_each_epoch: self.save()
 
     def model_exists(self) -> bool:

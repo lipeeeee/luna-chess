@@ -162,7 +162,7 @@ class LunaState():
         state[22] = (board.ply())
 
         # en passant square in float
-        if board.ep_square is None:
+        if not board.has_legal_en_passant():
             state[23] = 0
         else:
             state[23] = board.ep_square 
