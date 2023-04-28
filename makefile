@@ -14,3 +14,7 @@ train:
 # mostly used for debug
 eval:
 	python src/eval.py
+
+# Specific lint
+s:
+	pylint src/luna/luna_RL.py
