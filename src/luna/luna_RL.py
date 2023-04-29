@@ -1,37 +1,121 @@
 """
     Luna-Chess Reinforcement Learning Approach
-"""
 
-# TODO: Implement a better reward function
+    NOTE: 
+        -> The true_values variable in the AlphaZero implementation represents the actual value of
+        a state as determined by the final outcome of a game played from that state(USING RANDOM SIMULATION)
+        -> 
+    
+    TODO:
+    - Create a neural network class in PyTorch that takes in the game state as input and outputs a 
+    predicted value of the state.
+
+    Initialize a neural network instance as a value network.
+
+    During the MCTS algorithm, for each node in the tree, 
+    evaluate the state with the value network to obtain a predicted value. 
+    Use this predicted value to backpropagate the result of the simulation. 
+    This will allow the network to learn to predict the expected outcome of each state.
+
+    Train the value network using the Monte Carlo estimates of the true values that were obtained 
+    during the backpropagation step. The goal is to minimize the mean squared error between the predicted 
+    value and the Monte Carlo estimate of the true value.
+"""
 
 from __future__ import annotations
 import math
 import random
-from typing import Optional
 import chess
-from chess import STARTING_FEN
 import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 class LunaRL(nn.Module):
-    """Reinforcement Learning Neural Network"""
+    """Reinforcement Learning Value Neural Network"""
 
     env: object
 
     def __init__(self) -> None:
         super().__init__()
+        self.define()
 
-    def forward(self, x: torch.Tensor) -> None:
-        """Forward prop implementation"""
+    def define(self) -> None:
+        """Define Net
+            - Input: 24x8x8
+            - Output: predicted board value(tanh)
+        """        
+        ### Input 24, 8, 8
+        self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
+        
+        ### Hidden
+        # conv2
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(128)
+
+        # conv3
+        self.conv3 = nn.Conv2d(128, 512, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(512)
+
+        # conv4
+        self.conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(512)
+
+        # Pooling
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        # fc1
+        self.fc1 = nn.Linear(2048, 1024)
+        self.droupout1 = nn.Dropout(p=0.5)
+
+        # fc2
+        self.fc2 = nn.Linear(1024, 512) 
+        self.droupout2 = nn.Dropout(p=0.5)
+
+        # fc3
+        self.fc3 = nn.Linear(512, 256)
+
+        ### Output
+        self.last = nn.Linear(256, 1)
+
+    def forward(self, x: torch.Tensor):
+        """Forward Prop"""
+        ### Input 24, 8, 8
+        x = self.conv1(x)
+
+        ### Hidden        
+        # conv2
+        x = F.relu(self.bn2(self.conv2(x)))
+        
+        # conv3
+        x = F.relu(self.pool(self.bn3(self.conv3(x))))
+
+        # conv4
+        x = F.relu(self.pool(self.bn4(self.conv4(x))))
+
+        # reshape to fc1 (2048)    
+        x = x.view(x.size(0), -1)
+        
+        # fc1
+        x = F.relu(self.fc1(x))
+        x = self.droupout1(x)
+        
+        # fc2
+        x = F.relu(self.fc2(x))
+        x = self.droupout2(x)
+
+        # fc3
+        x = F.relu(self.fc3(x))
+
+        ### Output
+        return F.tanh(self.last(x)) # [-1 to 1]
 
 class MCTS:
     """Monte-Carlo tree search Agent"""
-    
+
     # Root node of MTCS
     root: MCTSNode
-    
+
     # Max search iterations
     max_iterations: int
 
@@ -43,23 +127,23 @@ class MCTS:
         """Runs the MCTS algorithm for `self.max_iterations` iterations 
         from the root node and returns the best action to take based on the final search tree."""
 
-        for i in range(self.max_iterations):
+        for _ in range(self.max_iterations):
             # Get best action
             node = self.root.select_action()
             state = node.state
-            
+
             # Get state reward
             if node.is_terminal():
                 reward = self.get_state_reward(state)
             else:
                 possible_moves = state.generate_legal_moves()
-                
+
                 if not node.children:
                     node.expand(possible_moves)
                 child_node = node.select_child()
                 new_state = child_node.state
                 reward = self.simulate(new_state)
-                
+
             node.update(reward)
         best_child = max(self.root.children, key=lambda child: child.visits)
 
@@ -76,8 +160,8 @@ class MCTS:
     def get_state_reward(self, state: chess.Board) -> int:
         """Get state reward"""
         winner = state.outcome().winner
-        
-        return {None: 0, chess.WHITE: 1, chess.BLACK: -1}[winner]    
+
+        return {None: 0, chess.WHITE: 1, chess.BLACK: -1}[winner]
 
 class MCTSNode:
     """A single node representation in MCTS"""
@@ -111,7 +195,7 @@ class MCTSNode:
         self.children = []
         self.visits = 0
         self.total_reward = 0
-        self.c_param = 1.4
+        self.c_param = 1 # alphazero value= 1
 
     # TODO: double_check if python's variable referencing logic doenst
     # mess this up
@@ -148,7 +232,7 @@ class MCTSNode:
             self.parent.update(reward)
 
     def select_action(self):
-        """Best action/node to follow given current search tree"""
+        """Highes UCB score child to follow given current search tree"""
         simulation_node = self
 
         while simulation_node.children:
