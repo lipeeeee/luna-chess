@@ -1,5 +1,7 @@
 """
-    Luna-Chess neural network
+    - DEPRECATED - 
+    
+    Luna-Chess artificial neural network
 """
 
 import os

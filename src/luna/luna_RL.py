@@ -10,7 +10,7 @@
     - Create a neural network class in PyTorch that takes in the game state as input and outputs a 
     predicted value of the state.
 
-    Initialize a neural network instance as a value network.
+    - Initialize a neural network instance as a value network.
 
     During the MCTS algorithm, for each node in the tree, 
     evaluate the state with the value network to obtain a predicted value. 
@@ -29,20 +29,35 @@ import chess
 import numpy as np
 import torch
 from torch import nn
+from torch.nn.modules.loss import _Loss
+from torch import optim
 from torch.nn import functional as F
+from luna_state import LunaState
 
 class LunaRL(nn.Module):
     """Reinforcement Learning Value Neural Network"""
 
-    env: object
+    # Optimizer
+    optimizer: optim.Optimizer
+
+    # Learning Rate
+    learning_rate: float
+
+    # Loss fn
+    loss: _Loss
 
     def __init__(self) -> None:
         super().__init__()
-        self.define()
 
-    def define(self) -> None:
+        # Define neural net
+        self.define_architecture()
+        self.learning_rate = 1e-3
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
+        self.loss = nn.MSELoss()
+
+    def define_architecture(self) -> None:
         """Define Net
-            - Input: 24x8x8
+            - Input: 24x8x8 (serialized chess.Board)
             - Output: predicted board value(tanh)
         """        
         ### Input 24, 8, 8
@@ -110,17 +125,24 @@ class LunaRL(nn.Module):
         ### Output
         return F.tanh(self.last(x)) # [-1 to 1]
 
+    def _train() -> None:
+        """Train value-network"""
+
 class MCTS:
     """Monte-Carlo tree search Agent"""
 
     # Root node of MTCS
     root: MCTSNode
 
+    # Value Network
+    value_network: LunaRL
+
     # Max search iterations
     max_iterations: int
 
-    def __init__(self, state, max_iterations=1000) -> None:
+    def __init__(self, state: chess.Board, value_network: LunaRL, max_iterations=1000) -> None:
         self.root = MCTSNode(state)
+        self.value_network = value_network
         self.max_iterations = max_iterations
 
     def select_action(self) -> chess.Move:
@@ -157,12 +179,28 @@ class MCTS:
             state = state.push(move)
         return self.get_state_reward(state)
 
-    def get_state_reward(self, state: chess.Board) -> int:
-        """Get state reward"""
-        winner = state.outcome().winner
+    def get_state_reward(self, state: chess.Board) -> float:
+        """Get state reward, predict if board is not over"""
+        value: float
 
-        return {None: 0, chess.WHITE: 1, chess.BLACK: -1}[winner]
+        # If game is not over predict state reward
+        if not state.is_game_over():
+            with torch.no_grad():
+                # Get board ready for input
+                serialized_board = LunaState.serialize_board(state)
+                state_tensor = torch.Tensor(serialized_board)
 
+                # Input to neural net
+                value = self.value_network(state_tensor)
+
+                # Result
+                value = value.item()            
+        else:
+            winner = state.outcome().winner
+            value = {None: 0.0, chess.WHITE: 1.0, chess.BLACK: -1.0}[winner]
+ 
+        return value
+            
 class MCTSNode:
     """A single node representation in MCTS"""
 
