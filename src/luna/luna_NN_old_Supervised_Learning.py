@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, CUDA
-from .luna_dataset import LunaDataset
+#from .luna_dataset import LunaDataset
 
 # Note: Training only has a CUDA implementation
 class LunaNN_old(nn.Module):
@@ -51,7 +51,7 @@ class LunaNN_old(nn.Module):
 
             # Dataset Initialazation
             if verbose: print(f"[DATASET] Initializing dataset...")
-            self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
+            #self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
             self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
 
             if verbose: print(f"[NEURAL NET] Training model...")
