@@ -7,6 +7,11 @@ web:
 build:
 	python src/main.py
 
+# build w clar
+cbuild: 
+	cls
+	python src/main.py
+
 # infinite train
 train:
 	python src/train.py

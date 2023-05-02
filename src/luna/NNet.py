@@ -7,13 +7,14 @@ import time
 import numpy as np
 import chess
 import torch
-from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
 import torch.optim as optim
 import tqdm
 from .luna_NN import LunaNN as net
 from .luna_utils import dotdict, AverageMeter
-from game.luna_game import ChessGame
+from .game.luna_game import ChessGame
+
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
 
 # Hyper Params
 args = dotdict({
@@ -39,7 +40,7 @@ class Luna_Network(object):
     # Action Size
     action_size: int
 
-    def __init__(self, args: dotdict, game: ChessGame):
+    def __init__(self, game: ChessGame) -> None:
         super(Luna_Network, self).__init__()
 
         self.nnet = net(game, args)
@@ -50,7 +51,7 @@ class Luna_Network(object):
         if args.cuda:
             self.nnet.cuda()
 
-    def train(self, examples):
+    def train(self, examples) -> None:
         """
             Train on `examples`
             
@@ -124,9 +125,12 @@ class Luna_Network(object):
             bar.finish()
 
 
-    def predict(self, boardAndValid):
+    def predict(self, boardAndValid) -> tuple:
         """
-        board: Chess.Board
+            Given a board, predicts probabilty distribuition and scalar board value
+
+            Args:
+                boardAndValid: board
         """
         # timing
         board, valid = boardAndValid
@@ -154,26 +158,31 @@ class Luna_Network(object):
         """Custom loss function for scalar value"""
         return torch.sum((targets-outputs.view(-1))**2)/targets.size()[0]
 
-    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar') -> None:
+        """Save weights checkpoint"""
         filepath = os.path.join(folder, filename)
         if not os.path.exists(folder):
             print("Checkpoint Directory does not exist! Making directory {}".format(folder))
             os.mkdir(folder)
         else:
             print("Checkpoint Directory exists! ")
+
         torch.save({
             'state_dict' : self.nnet.state_dict(),
         }, filepath)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+        """Load Weights"""
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
         filepath = os.path.join(folder, filename)
         if not os.path.exists(filepath):
             raise("No model in path {}".format(filepath))
+
         map_location = None if args.cuda else 'cpu'
         checkpoint = torch.load(filepath, map_location=map_location)
         self.nnet.load_state_dict(checkpoint['state_dict'])
 
     def print(self, game):
+        """Print current self object state"""
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(net(game, args).to(device))

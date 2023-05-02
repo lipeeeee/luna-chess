@@ -22,11 +22,10 @@
 from __future__ import annotations
 import torch
 from torch import nn
-from torch.nn.modules.loss import _Loss
 from torch import optim
 from torch.nn import functional as F
 
-from game.luna_game import ChessGame
+from .game.luna_game import ChessGame
 from .luna_utils import dotdict
 
 class LunaNN(nn.Module):
@@ -37,10 +36,6 @@ class LunaNN(nn.Module):
 
     # Learning Rate
     learning_rate: float
-
-    # Loss fn
-    value_loss: _Loss
-    policy_loss: _Loss
 
     # Action size
     action_size: int
@@ -64,9 +59,6 @@ class LunaNN(nn.Module):
         self.learning_rate = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
-        self.value_loss = nn.MSELoss()
-        self.policy_loss = nn.CrossEntropyLoss()      
-
     def define_architecture(self) -> None:
         """Define Net
             - Input: serialized chess.Board
@@ -81,36 +73,36 @@ class LunaNN(nn.Module):
         self.conv1 = nn.Conv3d(1, args.num_channels, 3, stride=1, padding=1)
         
         ## Hidden
-        self.conv2 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1, padding=1)
-        self.conv3 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
-        self.conv4 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
-        self.conv5 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
+        self.conv2 = nn.Conv3d(args.num_channels, args.num_channels * 2, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv3d(args.num_channels * 2, args.num_channels * 2, 3, stride=1)
+        self.conv4 = nn.Conv3d(args.num_channels * 2, args.num_channels * 2, 3, stride=1)
+        self.conv5 = nn.Conv3d(args.num_channels * 2, args.num_channels * 2, 1, stride=1)
 
         self.bn1 = nn.BatchNorm3d(args.num_channels)
-        self.bn2 = nn.BatchNorm3d(args.num_channels)
-        self.bn3 = nn.BatchNorm3d(args.num_channels)
-        self.bn4 = nn.BatchNorm3d(args.num_channels)
-        self.bn5 = nn.BatchNorm3d(args.num_channels)
+        self.bn2 = nn.BatchNorm3d(args.num_channels * 2)
+        self.bn3 = nn.BatchNorm3d(args.num_channels * 2)
+        self.bn4 = nn.BatchNorm3d(args.num_channels * 2)
+        self.bn5 = nn.BatchNorm3d(args.num_channels * 2)
 
-        self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4), 1024)
+        self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4), 1024) #4096 -> 1024
         self.fc_bn1 = nn.BatchNorm1d(1024)
 
         self.fc2 = nn.Linear(1024, 512)
         self.fc_bn2 = nn.BatchNorm1d(512)
 
-        self.fc3 = nn.Linear(512, self.action_size)
+        self.fc3 = nn.Linear(512, 512)
         self.fc_bn3 = nn.BatchNorm1d(512)
-        
+
+        # output p dist        
         self.fc4 = nn.Linear(512, self.action_size)
 
+        # output scalar
         self.fc5 = nn.Linear(512, 1)
-
-        # Output layers are artificial and are defined in forwarcd prop
 
     def forward(self, boardsAndValids):
         """Forward prop"""
         x, valids = boardsAndValids
-        
+
         x = x.view(-1, 1, self.board_x, self.board_y, self.board_z)
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
@@ -128,6 +120,3 @@ class LunaNN(nn.Module):
 
         pi -= (1 - valids) * 1000
         return F.log_softmax(pi, dim=1), torch.tanh(v)
-
-    def _train() -> None:
-        """Train value-network"""

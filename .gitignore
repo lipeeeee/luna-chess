@@ -3,6 +3,7 @@ data/
 data/*
 processed/
 processed/*
+runs/*
 
 # should we import content(stockfish)?
 content/

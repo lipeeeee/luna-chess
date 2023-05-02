@@ -92,7 +92,7 @@ class ChessGame():
         
         return np.array(acts)
 
-    def getGameEnded(self, board: chess.Board) -> float:
+    def getGameEnded(self, board: chess.Board, player: chess.Color) -> float:
         """return 0 if not ended, 1 if player 1 won, -1 if player 1 lost"""
         
         outcome = board.outcome()
