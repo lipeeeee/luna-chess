@@ -1,289 +1,133 @@
 """
-    - DEPRECATED - 
+    Luna-Chess Reinforcement Neural Network Architecture
     
-    Luna-Chess artificial neural network
+    NOTE
+    Neural Network
+    - Inputs:
+        . b - serialized board
+    - Outputs:
+        . vθ(s) - a scalar value of the board state ∈ [-1,1] from the perspective of the current player
+        . →pθ(s) - a policy that is a probability vector over all possible actions.
+
+    Training
+    (st,→πt,zt), where:
+        - st is the state
+        - →πt is an estimate of the probability from state st
+        - zt final game outcome ∈ [-1,1]
+
+    Loss function:
+    l=∑t(vθ(st)-zt)2-→πt⋅log(→pθ(st))
 """
 
-import os
-import time
+from __future__ import annotations
 import torch
-import torch.nn.functional as F
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch import nn
+from torch.nn.modules.loss import _Loss
+from torch import optim
+from torch.nn import functional as F
 
-from .luna_constants import LUNA_MAIN_FOLDER, CURRENT_MODEL, NUM_SAMPLES, LUNA_MODEL_FOLDER, CUDA
-from .luna_dataset import LunaDataset
+from game.luna_game import ChessGame
+from .luna_utils import dotdict
 
-# Note: Training only has a CUDA implementation
 class LunaNN(nn.Module):
-    """Pytorch Neural Network"""
+    """Reinforcement Learning Neural Network"""
 
-    def __init__(self, model_file=CURRENT_MODEL, verbose=False, epochs=100, save_after_each_epoch=False) -> None:
+    # Optimizer
+    optimizer: optim.Optimizer
+
+    # Learning Rate
+    learning_rate: float
+
+    # Loss fn
+    value_loss: _Loss
+    policy_loss: _Loss
+
+    # Action size
+    action_size: int
+
+    # Game instance
+    game: ChessGame
+
+    # HyperParameter args
+    args: dotdict
+
+    def __init__(self, game: ChessGame, args: dotdict) -> None:
         super(LunaNN, self).__init__()
 
-        # Neural Net definition
-        if verbose: print(f"[NEURAL NET] Initializing neural network...")
-        self.define()
-        self.lr = 1e-3
-        self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        self.loss = nn.MSELoss()
-        self.batch_size = 256
-        self.epochs = epochs
-        self.save_after_each_epoch = save_after_each_epoch
-        
-        # Cuda handling, only CUDA training for now
-        if CUDA:
-            self.cuda()
-        else:
-            raise Exception("Non-Cuda implementation still TODO")
-        
-        self.model_file = model_file # .pt file(ex: main_luna.pt)
-        self.model_path = os.path.join(LUNA_MAIN_FOLDER, LUNA_MODEL_FOLDER, model_file)
- 
-        # Check if existing model
-        if self.model_exists():
-            if verbose: print(f"[NEURAL NET] Found existing model at: {self.model_path}, loading...")
-            self.load()
-        else:            
-            if verbose: print(f"[NEURAL NET] NO EXISTING NEURAL NET AT: {self.model_path}, Training new neural network...")
+        self.board_x, self.board_y, self.board_z = game.getBoardSize()
+        self.action_size = game.getActionSize()
+        self.game = game
+        self.args = args
 
-            # Dataset Initialazation
-            if verbose: print(f"[DATASET] Initializing dataset...")
-            self.dataset = LunaDataset(num_samples=NUM_SAMPLES, verbose=verbose)    
-            self.train_loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)        
+        # Define neural net
+        self.define_architecture()
+        self.learning_rate = 1e-3
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
-            if verbose: print(f"[NEURAL NET] Training model...")
-            self._train(epochs=self.epochs, save_after_each_epoch=self.save_after_each_epoch)
+        self.value_loss = nn.MSELoss()
+        self.policy_loss = nn.CrossEntropyLoss()      
 
-            if verbose: print(f"[NEURAL NET] FINISHED TRAINING, SAVING...")
-            self.save()
-
-    def define(self) -> None:
+    def define_architecture(self) -> None:
         """Define Net
-            Net results after 39EPOCHS(16h) training, 24m each:
-                -> last loss: EPOCH[39]: 4161.70907 in 24min
-                -> avg stockfish diff: 7.59
-                -> rating: X
-                -> size: 22MB
-        """        
-        ### Input 24, 8, 8
-        self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
+            - Input: serialized chess.Board
+            - Output:
+                - predicted board value (tanh)
+                - policy distribution over possible moves (softmax)
+        """
+        # Args shortcut
+        args = self.args
+
+        # Input
+        self.conv1 = nn.Conv3d(1, args.num_channels, 3, stride=1, padding=1)
         
-        ### Hidden
-        # conv2
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(128)
+        ## Hidden
+        self.conv2 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
+        self.conv4 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
+        self.conv5 = nn.Conv3d(args.num_channels, args.num_channels, 3, stride=1)
 
-        # conv3
-        self.conv3 = nn.Conv2d(128, 512, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(512)
+        self.bn1 = nn.BatchNorm3d(args.num_channels)
+        self.bn2 = nn.BatchNorm3d(args.num_channels)
+        self.bn3 = nn.BatchNorm3d(args.num_channels)
+        self.bn4 = nn.BatchNorm3d(args.num_channels)
+        self.bn5 = nn.BatchNorm3d(args.num_channels)
 
-        # conv4
-        self.conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn4 = nn.BatchNorm2d(512)
+        self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4), 1024)
+        self.fc_bn1 = nn.BatchNorm1d(1024)
 
-        # Pooling
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc2 = nn.Linear(1024, 512)
+        self.fc_bn2 = nn.BatchNorm1d(512)
+
+        self.fc3 = nn.Linear(512, self.action_size)
+        self.fc_bn3 = nn.BatchNorm1d(512)
         
-        # fc1
-        self.fc1 = nn.Linear(2048, 1024)
-        self.droupout1 = nn.Dropout(p=0.5)
+        self.fc4 = nn.Linear(512, self.action_size)
 
-        # fc2
-        self.fc2 = nn.Linear(1024, 512) 
-        self.droupout2 = nn.Dropout(p=0.5)
+        self.fc5 = nn.Linear(512, 1)
 
-        # fc3
-        self.fc3 = nn.Linear(512, 256)
+        # Output layers are artificial and are defined in forwarcd prop
 
-        ### Output
-        self.last = nn.Linear(256, 1)
-
-    def forward(self, x: torch.Tensor):
-        """Forward Prop"""
-        ### Input 24, 8, 8
-        x = self.conv1(x)
-
-        ### Hidden        
-        # conv2
+    def forward(self, boardsAndValids):
+        """Forward prop"""
+        x, valids = boardsAndValids
+        
+        x = x.view(-1, 1, self.board_x, self.board_y, self.board_z)
+        x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
-        
-        # conv3
-        x = F.relu(self.pool(self.bn3(self.conv3(x))))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x)))
+        x = x.view(-1, self.args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4))
 
-        # conv4
-        x = F.relu(self.pool(self.bn4(self.conv4(x))))
+        x = F.dropout(F.relu(self.fc_bn1(self.fc1(x))), p=self.args.dropout, training=self.training)
+        x = F.dropout(F.relu(self.fc_bn2(self.fc2(x))), p=self.args.dropout, training=self.training)
+        x = F.dropout(F.relu(self.fc_bn3(self.fc3(x))), p=self.args.dropout, training=self.training)
 
-        # reshape to fc1 (2048)    
-        x = x.view(x.size(0), -1)
-        
-        # fc1
-        x = F.relu(self.fc1(x))
-        x = self.droupout1(x)
-        
-        # fc2
-        x = F.relu(self.fc2(x))
-        x = self.droupout2(x)
+        pi = self.fc4(x)
+        v = self.fc5(x)
 
-        # fc3
-        x = F.relu(self.fc3(x))
+        pi -= (1 - valids) * 1000
+        return F.log_softmax(pi, dim=1), torch.tanh(v)
 
-        ### Output
-        return self.last(x)
-
-    """luna-first
-    def define(self) -> None:
-        Define Net
-            Net results after 35EPOCHS(14h) training:
-                -> last loss: EPOCH [ 35]: 8512.545898
-                -> avg stockfish diff: 41.17
-                -> rating: X
-                -> size: 140MB        
-        # input
-        self.conv1 = nn.Conv2d(24, 64, kernel_size=3, padding=1)
-        
-        # ConvNets
-        # conv2
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(128)
-
-        # conv3
-        self.conv3 = nn.Conv2d(128, 512, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(512)
-
-        # conv4
-        self.conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn4 = nn.BatchNorm2d(512)
-
-        # Pooling
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        # Dense
-        self.fc1 = nn.Linear(2048, 1024)
-        self.droupout1 = nn.Dropout(p=0.5)
-
-        self.fc2 = nn.Linear(1024, 512) 
-        self.droupout2 = nn.Dropout(p=0.5)
-
-        self.fc3 = nn.Linear(512, 256)
-
-        # output
-        self.last = nn.Linear(256, 1)
-
-    def forward(self, x: torch.Tensor):
-        Forward Prop
-        #input
-        x = self.conv1(x)
-        
-        # conv2
-        x = F.relu(self.bn2(self.conv2(x)))
-        
-        # conv3
-        x = F.relu(self.pool(self.bn3(self.conv3(x))))
-
-        # conv4
-        x = F.relu(self.pool(self.bn4(self.conv4(x))))
-
-        # reshape to fc    
-        x = x.view(x.size(0), -1)
-        
-        # Dense layers
-        # fc1
-        x = F.relu(self.fc1(x))
-        x = self.droupout1(x)
-        
-        # fc2
-        x = F.relu(self.fc2(x))
-        x = self.droupout2(x)
-
-        # fc3
-        x = F.relu(self.fc3(x))
-
-        return self.last(x)
-    """    
-
-
-    def lite_define(self) -> None:
-        """Define neural net"""
-        
-        # input
-        self.conv1 = nn.Conv2d(15, 32, kernel_size=3, padding=1)
-
-        # hidden
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
-        self.conv5 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=1)
-
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.fc1 = nn.Linear(1024 * 2 * 2, 2048)
-        #self.dropout1 = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(2048, 1024)
-        #self.dropout2 = nn.Dropout(0.2)
-        self.fc3 = nn.Linear(1024, 512)
-        #self.dropout3 = nn.Dropout(0.2)
-        self.fc4 = nn.Linear(512, 1)
-
-    def lite_forward(self, x: torch.Tensor):
-        x = F.relu(self.conv1(x))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = self.pool(F.relu(self.conv4(x)))
-        x = self.pool(F.relu(self.conv5(x)))
-        x = self.pool(F.relu(self.conv6(x)))
-
-        x = x.view(-1, 1024 * 2 * 2)
-
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
-
-        return x
-
-    def load(self) -> None:
-        """Load luna from a .pth file"""
-        self.load_state_dict(torch.load(self.model_path))
-        self.eval()
-
-    def save(self) -> None:
-        """Save luna weights and biases and everything else into a .pt file"""
-        torch.save(self.state_dict(), self.model_path)
-    
-    def _train(self, epochs, save_after_each_epoch=True) -> None:
-        """Train LunaNN()(only on cuda)"""
-        assert not self.model_exists()
-        assert CUDA
-        
-        self.train()
-
-        for epoch in range(epochs):
-            epoch_clock = time.time()
-            all_loss = 0
-            num_loss = 0
-            for batch_idx, (data, target) in enumerate(self.train_loader):
-                target = target.unsqueeze(-1)
-                data, target = data.to("cuda"), target.to("cuda")
-                data = data.float()
-                target = target.float()
-
-                self.optimizer.zero_grad()
-                output = self(data)
-
-                loss = self.loss(output, target)
-                loss.backward()
-                self.optimizer.step()
-                
-                all_loss += loss.item()
-                num_loss += 1
-
-            print(f"EPOCH[{epoch}]: {all_loss/num_loss} in {(time.time() - epoch_clock)/60}min")
-
-            if save_after_each_epoch: self.save()
-
-    def model_exists(self) -> bool:
-        """Checks if there is a pre-saved model"""
-        return os.path.exists(self.model_path)
+    def _train() -> None:
+        """Train value-network"""
