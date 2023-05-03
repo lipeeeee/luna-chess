@@ -8,7 +8,6 @@ import numpy as np
 import logging
 import torch
 import torch.optim as optim
-import tqdm
 from .luna_NN import LunaNN as net
 from .utils import dotdict, AverageMeter
 from .game.luna_game import ChessGame
@@ -79,9 +78,8 @@ class Luna_Network(object):
                 target_vs = torch.FloatTensor(np.array(vs).astype(np.float64))
                 target_valids = torch.FloatTensor(np.array(valids))
 
-                # predict
-                if args.cuda:
-                    boards, target_pis, target_vs, target_valids = boards.contiguous().cuda(), target_pis.contiguous().cuda(), target_vs.contiguous().cuda(), target_valids.contiguous().cuda()
+                # Cuda performance improvement
+                boards, target_pis, target_vs, target_valids = boards.contiguous().cuda(), target_pis.contiguous().cuda(), target_vs.contiguous().cuda(), target_valids.contiguous().cuda()
 
                 # measure data loading time
                 data_time.update(time.time() - end)
@@ -98,6 +96,7 @@ class Luna_Network(object):
                 writer.add_scalar("Loss/train", l_pi.item(), batch_idx)
                 writer.add_scalar("Loss/train", l_v.item(), batch_idx)
                 writer.flush()
+                
                 # compute gradient and do SGD step
                 optimizer.zero_grad()
                 total_loss.backward()
@@ -120,7 +119,6 @@ class Luna_Network(object):
                             epoch=epoch+1
                             ))
 
-
     def predict(self, boardAndValid) -> tuple:
         """
             Given a board, predicts probabilty distribuition and scalar board value
@@ -130,7 +128,6 @@ class Luna_Network(object):
         """
         # timing
         board, valid = boardAndValid
-        start = time.time()
 
         # preparing input
         board = torch.FloatTensor(board.astype(np.float64))
@@ -139,11 +136,12 @@ class Luna_Network(object):
             board = board.contiguous().cuda()
             valid = valid.contiguous().cuda()
         board = board.view(1, self.board_x, self.board_y, self.board_z)
+        
+        # predict without changing weigths
         self.nnet.eval()
         with torch.no_grad():
             pi, v = self.nnet((board, valid))
 
-        #print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
         return torch.exp(pi).data.cpu().numpy()[0], v.data.cpu().numpy()[0]
 
     def loss_pi(self, targets, outputs):
@@ -167,7 +165,7 @@ class Luna_Network(object):
             'state_dict' : self.nnet.state_dict(),
         }, filepath)
 
-    def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+    def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar') -> None:
         """Load Weights"""
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
         filepath = os.path.join(folder, filename)
@@ -178,7 +176,7 @@ class Luna_Network(object):
         checkpoint = torch.load(filepath, map_location=map_location)
         self.nnet.load_state_dict(checkpoint['state_dict'])
 
-    def print(self, game):
+    def print(self, game) -> None:
         """Print current self object state"""
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(net(game, args).to(device))

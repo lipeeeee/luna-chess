@@ -2,10 +2,6 @@
     Util Classes/functions for luna
 """
 
-import chess.engine
-
-sf: chess.engine.SimpleEngine = None
-
 class AverageMeter(object):
     """From https://github.com/pytorch/examples/blob/master/imagenet/main.py"""
 
@@ -30,4 +26,5 @@ class dotdict(dict):
     """DotDict implementation"""
 
     def __getattr__(self, name):
+        """Make so we can acess values by using dict.key"""
         return self[name]

@@ -25,6 +25,7 @@ from torch import nn
 from torch import optim
 from torch.nn import functional as F
 
+# Luna
 from .game.luna_game import ChessGame
 from .utils import dotdict
 
