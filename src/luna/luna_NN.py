@@ -26,7 +26,7 @@ from torch import optim
 from torch.nn import functional as F
 
 from .game.luna_game import ChessGame
-from .luna_utils import dotdict
+from .utils import dotdict
 
 class LunaNN(nn.Module):
     """Reinforcement Learning Neural Network"""
@@ -109,9 +109,7 @@ class LunaNN(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
         x = F.relu(self.bn4(self.conv4(x)))
         x = F.relu(self.bn5(self.conv5(x)))
-        #print(f"PRE-VIEW X SHAPE: {x.shape}")
         x = x.view(-1, self.args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4))
-        #print(f"POS-VIEW X SHPAE: {x.shape}")
         x = F.dropout(F.relu(self.fc_bn1(self.fc1(x))), p=self.args.dropout, training=self.training)
         x = F.dropout(F.relu(self.fc_bn2(self.fc2(x))), p=self.args.dropout, training=self.training)
         x = F.dropout(F.relu(self.fc_bn3(self.fc3(x))), p=self.args.dropout, training=self.training)
@@ -119,11 +117,5 @@ class LunaNN(nn.Module):
         pi = self.fc4(x)
         v = self.fc5(x)
 
-
-        #print("PI("+str(pi.shape)+"): \n" + str(pi))
-        #print("VALIDS("+ str(valids.shape) +": \n " + str(valids))
-
-        # x= torch.from_numpy(valids).type(torch.FloatTensor).cuda()
-        # pi -= (1-x)*1000
         pi -= (1 - valids) * 1000
         return F.log_softmax(pi, dim=1), torch.tanh(v)
