@@ -22,7 +22,7 @@ args = dotdict({
     'dropout': 0.3,
     'epochs': 10,
     'batch_size': 64,
-    'cuda': torch.cuda.is_available(),
+    'cuda': True,
     'num_channels': 128,
 })
 
@@ -48,8 +48,8 @@ class Luna_Network(object):
         self.action_size = game.getActionSize()
 
         # Use cuda if available
-        if args.cuda:
-            self.nnet.cuda()
+        #if args.cuda:
+        self.nnet.cuda()
 
     def train(self, examples) -> None:
         """
@@ -70,7 +70,6 @@ class Luna_Network(object):
             v_losses = AverageMeter()
             end = time.time()
 
-            bar = tqdm.tqdm('Training Net', max=int(len(examples)/args.batch_size))
             batch_idx = 0
 
             while batch_idx < int(len(examples)/args.batch_size):
@@ -89,6 +88,7 @@ class Luna_Network(object):
                 data_time.update(time.time() - end)
 
                 # compute output
+                print(f"computing output{boards.shape}, {target_valids.shape}")
                 out_pi, out_v = self.nnet((boards, target_valids))
                 l_pi = self.loss_pi(target_pis, out_pi)
                 l_v = self.loss_v(target_vs, out_v)
@@ -111,18 +111,14 @@ class Luna_Network(object):
                 batch_idx += 1
 
                 # plot progress
-                bar.suffix  = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss_pi: {lpi:.4f} | Loss_v: {lv:.3f}'.format(
+                print('({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Loss_pi: {lpi:.4f} | Loss_v: {lv:.3f}'.format(
                             batch=batch_idx,
                             size=int(len(examples)/args.batch_size),
                             data=data_time.avg,
                             bt=batch_time.avg,
-                            total=bar.elapsed_td,
-                            eta=bar.eta_td,
                             lpi=pi_losses.avg,
                             lv=v_losses.avg,
-                            )
-                bar.next()
-            bar.finish()
+                            ))
 
 
     def predict(self, boardAndValid) -> tuple:

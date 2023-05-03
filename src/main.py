@@ -25,7 +25,7 @@ coloredlogs.install(level='INFO')  # Change this to DEBUG to see more info.
 
 args = dotdict({
     'numIters': 1000,
-    'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
+    'numEps': 1,                # (100)Number of complete self-play games to simulate during a new iteration.
     'tempThreshold': 10,        #
     'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
     'maxlenOfQueue': 200000,    # Number of game examples to train the neural networks.

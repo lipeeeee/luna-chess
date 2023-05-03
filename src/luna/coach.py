@@ -14,6 +14,7 @@ from tqdm import tqdm
 from .game.arena import Arena
 from .mcts import MCTS
 from .game.luna_game import ChessGame
+from .NNet import Luna_Network 
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +25,8 @@ class Coach():
     """
 
     game: ChessGame
+
+    nnet: Luna_Network
 
     def __init__(self, game, nnet, args):
         self.game = game
@@ -66,8 +69,6 @@ class Coach():
             _, valids_sym = zip(*self.game.getSymmetries(canonicalBoard, valids))
             sym = zip(bs,ps,valids_sym)
 
-
-
             for b, p, valid in sym:
                 trainExamples.append([self.game.toArray(b), self.curPlayer, p, valid])
 
@@ -96,7 +97,6 @@ class Coach():
 
                 for _ in tqdm(range(self.args.numEps), desc="Self Play"):
                     self.mcts = MCTS(self.game, self.nnet, self.args)  # reset search tree
-                    log.warning("hello + " + str(self.executeEpisode()))
                     iterationTrainExamples += self.executeEpisode()
 
                 # save the iteration examples to the history
@@ -159,7 +159,6 @@ class Coach():
 
             pwins = oneWon
             nwins = twoWon
-
 
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
             if pwins + nwins == 0 or float(nwins) / (pwins + nwins) < self.args.updateThreshold:

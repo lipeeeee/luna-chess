@@ -99,7 +99,7 @@ class ChessGame():
         reward = 0.0
         if outcome is not None:
             if outcome.winner is None:
-                # draw, very little reward value
+                # draw, very little negative reward value
                 reward = 1e-4
             else:
                 if outcome.winner == board.turn:
