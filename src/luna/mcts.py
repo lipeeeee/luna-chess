@@ -7,9 +7,10 @@ import math
 import numpy as np
 import chess
 
+# Luna
 from .game.luna_game import ChessGame
 from .NNet import Luna_Network
-from .luna_utils import dotdict
+from .utils import dotdict
 
 EPS = 1e-8
 log = logging.getLogger(__name__)
@@ -52,15 +53,14 @@ class MCTS():
         self.game = game
         self.nnet = nnet
         self.args = args
-        self.Qsa = {}  
-        self.Nsa = {}  
-        self.Ns = {}  
-        self.Ps = {}  
+        self.Qsa = {} 
+        self.Nsa = {}
+        self.Ns = {}
+        self.Ps = {}
+        self.Es = {}
+        self.Vs = {}
 
-        self.Es = {}  
-        self.Vs = {}  
-
-    def getActionProb(self, canonicalBoard: chess.Board, temp=1):
+    def getActionProb(self, canonicalBoard: chess.Board, temp=1) -> list:
         """
         This function performs numMCTSSims simulations of MCTS starting from
         canonicalBoard.
@@ -69,7 +69,7 @@ class MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
-        for i in range(self.args.numMCTSSims):
+        for _ in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)

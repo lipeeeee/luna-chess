@@ -1,5 +1,5 @@
 """
-    Util Classes/functions for luna to prevent circular imports
+    Util Classes/functions for luna
 """
 
 import chess.engine
@@ -25,7 +25,6 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
 
 class dotdict(dict):
     """DotDict implementation"""
