@@ -9,6 +9,11 @@ from luna.coach import Coach
 from luna.game import ChessGame as Game
 from luna.NNet import Luna_Network as nn
 from luna.utils import *
+from luna.game.arena import Arena
+from luna.mcts import MCTS
+from luna.game.player import HumanChessPlayer
+import numpy as np
+import chess
 
 log = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
@@ -24,10 +29,12 @@ args = dotdict({
     'cpuct': 1,
     'checkpoint': './temp/',
     'load_model': False,
+    'load_examples': False,
     'load_folder_file': ('./pretrained_models/','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
     'dir_noise': True,
     'dir_alpha': 1.4,
+    'save_anyway': False        # Always save model, shouldnt be used
 })
 
 def main() -> int:
@@ -38,13 +45,24 @@ def main() -> int:
     nnet = nn(g)
 
     log.info('Loading checkpoint "%s/"...', args.load_folder_file)
-    nnet.load_checkpoint(args.load_folder_file[0], args.load_folder_file[1])
+    nnet.load_checkpoint(args.checkpoint, args.load_folder_file[1])
 
     log.info('Loading the Coach...')
     c = Coach(g, nnet, args)
 
     log.info("Loading 'trainExamples' from file...")
     c.loadTrainExamples()
+
+    nmcts = MCTS(g, nnet, args)
+    nmcts2 = MCTS(g, nnet, args)
+
+    def _print(x):
+        print(x)
+
+    arena = Arena(lambda x: np.argmax(nmcts.getActionProb(x, temp=0)),
+                  lambda x: np.argmax(nmcts2.getActionProb(x, temp=0)), g, display=_print)
+
+    arena.playGame(verbose=True)
 
     return 0
 
