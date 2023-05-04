@@ -5,6 +5,10 @@
 import logging
 from tqdm import tqdm
 
+# Luna
+from .luna_game import ChessGame
+from NNet import Luna_Network
+
 log = logging.getLogger(__name__)
 
 class Arena():
@@ -12,18 +16,23 @@ class Arena():
         An Arena class where any 2 agents can be pit against each other.
     """
 
+    # Chess Env
+    game: ChessGame
+
+    # Networks
+    player1: Luna_Network
+    player2: Luna_Network
+
     def __init__(self, player1, player2, game, display=None):
         """
         Input:
             player 1,2: two functions that takes board as input, return action
             game: Game object
-            display: a function that takes board as input and prints it (e.g.
-                     display in othello/OthelloGame). Is necessary for verbose
-                     mode.
-
-        see othello/OthelloPlayers.py for an example. See pit.py for pitting
-        human players/other baselines with each other.
+            display: a function that takes board as input and prints it.
+                    Is necessary for verbose mode.
         """
+        super(Arena, self).__init__()
+
         self.player1 = player1
         self.player2 = player2
         self.game = game

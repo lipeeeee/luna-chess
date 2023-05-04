@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 args = dotdict({
     'lr': 0.02,
     'dropout': 0.3,
-    'epochs': 10,
+    'epochs': 20,
     'batch_size': 64,
     'cuda': True,
     'num_channels': 128,

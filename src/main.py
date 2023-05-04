@@ -40,7 +40,7 @@ args = dotdict({
     'dir_alpha': 1.4,
 })
 
-def main():
+def main() -> int:
     log.info('Loading %s...', Game.__name__)
     g = Game()
 
@@ -62,6 +62,8 @@ def main():
 
     log.info('Starting the learning process')
     c.learn()
+
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

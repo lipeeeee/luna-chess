@@ -12,6 +12,10 @@ cbuild:
 	cls
 	python src/main.py
 
+# playground
+playground:
+	python src/playground.py
+
 # infinite train
 train:
 	python src/train.py
