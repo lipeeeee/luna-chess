@@ -61,7 +61,37 @@ self.fc5 = nn.Linear(512, 1)
 ```
 
 ## Monte-Carlo Tree Search for Policy Improvement
-Given a state **s**, the neural network provides an estimate of the policy **pθ**
+Given a state **s**, the neural network provides an estimate of the policy **pθ**. During the training phase, we wish to improve these estimates. This is accomplished using a Monte Carlo Tree Search (MCTS). In the search tree, each node represents a board configuration. A directed edge exists between two nodes i→j if a valid action can cause state transition from state **i** to **j**. Starting with an empty search tree, we expand the search tree one node (state) at a time. When a new node is encountered, instead of performing a rollout, the value of the new node is obtained from the neural network itself. This value is propagated up the search path.
+
+
+
+![image](https://user-images.githubusercontent.com/62669782/236342095-b49c1869-f7b6-4f69-9a26-0c9f3be73412.png)
+
+For the tree search, we maintain the following:
+- **Q(s,a)**: the expected reward for taking action **a** from state **s**, i.e. the Q values;
+- **N(s,a)**: the number of times we took action **a** from state **s** across simulations;
+- **P(s,.)=pθ(s)**: the initial estimate of taking an action from the state s according to the policy returned by the current neural network;
+
+
+From these, we can calculate **U(s,a)**, the upper confidence bound on the Q-values as
+
+
+![image](https://user-images.githubusercontent.com/62669782/236342522-1df81c3c-17b4-4a0c-8bd3-ee452e11bdb3.png)
+
+
+**cpuct** is a hyperparameter that controls the degree of exploration. To use MCTS to improve the initial policy returned by the current neural network, we initialise our empty search tree with **s** as the root. A single simulation proceeds as follows. We compute the action **a** that maximises the upper confidence bound **U(s,a)**. If the next state **s′** (obtained by playing action **a** on state **s**) exists in our tree, we recursively call the search on **s′**. If it does not exist, we add the new state to our tree and initialise **P(s′,.)=pθ(s′)** and the value **v(s′)=vθ(s′)** from the neural network, and initialise **Q(s′,a)** and **N(s′,a)** to 0 for all **a**. Instead of performing a rollout, we then propagate **v(s′)** up along the path seen in the current simulation and update all **Q(s,a)** values. On the other hand, if we encounter a terminal state, we propagate the actual reward (+1 if player wins, else -1).
+
+After a few simulations, the **N(s,a)** values at the root provide a better approximation for the policy. The improved stochastic policy **π(s)** is simply the normalised counts **N(s,⋅)/∑b(N(s,b))**. During self-play, we perform MCTS and pick a move by sampling a move from the improved policy **π(s)**.
+
+## Policy Iteration through Self-Play
+(A High Level overview on how the network learns)
+
+
+We initialise our neural network with random weights, thus starting with a random policy and value network. In each iteration of our algorithm, we play a number of games of self-play. In each turn of a game, we perform a fixed number of MCTS simulations starting from the current state **st**. We pick a move by sampling from the improved policy **πt**. This gives us a training example **(st,πt, _)**. The reward **_** is filled in at the end of the game: +1 if the current player eventually wins the game, else -1. The search tree is preserved during a game.
+
+
+At the end of the iteration, the neural network is trained with the obtained training examples. The old and the new networks are pit against each other. If the new network wins more than a set threshold fraction of games, the network is updated to the new network. Otherwise, we conduct another iteration to augment the training examples.
+
 
 ## Feature engineering(ONLY USED IN SUPERVISED LEARNING WHICH IS DEPRECATED)
 This was by far the most annoying process in the building of the neural network architecture, from the board serialization data to type of data...
@@ -89,3 +119,4 @@ While a 5M dataset in `uint8` would take around 5GiB of RAM and disk space.
 
 `float32` also brought problems such as the network not understanding the pieces bitmaps, because they were float values the network was thinking of the pieces as raw values instead of classes.
 
+*a project by lipeeeee*
