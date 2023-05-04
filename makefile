@@ -7,10 +7,19 @@ web:
 build:
 	python src/main.py
 
-# infinite train
-train:
-	python src/train.py
+# build w clar
+cbuild: 
+	cls
+	python src/main.py
+
+# playground
+playground:
+	python src/playground.py
 
 # mostly used for debug
 eval:
-	python src/eval.py
+	python src/luna/eval.py
+
+# Specific lint
+s:
+	pylint src/luna/luna_RL.py

@@ -1,4 +1,6 @@
 """
+    - DEPRECATED - Used on earlier supervised learning approach
+
     Hand-Made Luna evaluator
     made to test and debug new models and check if it overfit
 """
