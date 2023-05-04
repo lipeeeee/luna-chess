@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 # Luna
 from .luna_game import ChessGame
-from NNet import Luna_Network
+from luna.NNet import Luna_Network
 
 log = logging.getLogger(__name__)
 

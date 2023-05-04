@@ -188,8 +188,8 @@ class Coach():
 
             # Compare models
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
-            save_anyway = True
-            if save_anyway:
+            if self.args.save_anyway:
+                log.warning("NOT CHECKING MODEL'S PERFORMANCE(args.save_anyway=True)")
                 log.info('ACCEPTING NEW MODEL')
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')

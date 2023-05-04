@@ -152,6 +152,11 @@ class Luna_Network(object):
         """Custom loss function for scalar value"""
         return torch.sum((targets-outputs.view(-1))**2)/targets.size()[0]
 
+    def loss(self, l_pi: torch.Tensor, l_v: torch.Tensor) -> torch.Tensor: 
+        """Loss function
+            l=∑t(vθ(st)-zt)2-→πt⋅log(→pθ(st))
+        """
+
     def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar') -> None:
         """Save weights checkpoint"""
         filepath = os.path.join(folder, filename)

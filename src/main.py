@@ -34,10 +34,12 @@ args = dotdict({
     'cpuct': 1,
     'checkpoint': './temp/',
     'load_model': False,
+    'load_examples': True,     # False recommended, so it doesnt overfit net
     'load_folder_file': ('./pretrained_models/','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,
     'dir_noise': True,
     'dir_alpha': 1.4,
+    'save_anyway': False        # Always save model, shouldnt be used
 })
 
 def main() -> int:
@@ -56,7 +58,7 @@ def main() -> int:
     log.info('Loading the Coach...')
     c = Coach(g, nnet, args)
 
-    if args.load_model:
+    if args.load_examples:
         log.info("Loading 'trainExamples' from file...")
         c.loadTrainExamples()
 

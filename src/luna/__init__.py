@@ -8,6 +8,3 @@ from .luna_NN import *
 from .utils import *
 from .mcts import *
 from .NNet import *
-
-# Game Env
-from .game import *

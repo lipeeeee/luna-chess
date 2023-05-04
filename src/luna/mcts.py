@@ -15,7 +15,7 @@ from .utils import dotdict
 EPS = 1e-8
 log = logging.getLogger(__name__)
 
-class MCTS():
+class MCTS(object):
     """
         This class handles the MCTS tree.
     """
