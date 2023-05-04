@@ -7,8 +7,7 @@
 
 # Luna Chess
 </div>
-<b>Luna-Chess</b> is a chess engine rated around <b>(TBD)</b>, It works using a <b>Deep Neural Network</b> to evaluate a board state and then using <b>Alpha–beta pruning</b> to search through the space of possible future board states and evaluate what is the best move over-time.
-
+Luna-Chess is a single-thread single-GPU chess engine rated around 1850, It trains a chess engine through pure self-play without <i>any</i> human knowledge except the rules of the game.
 
 ![Sem título](https://user-images.githubusercontent.com/62669782/233196743-ed90f2c3-7e2d-4a42-a469-b344e99115a4.png)
 
@@ -18,27 +17,53 @@
 <p>
 
 ## Deep Neural Network
-I used pytorch because of it's explicit control over networks(the architecture can be improved by addding pooling2d and other types of layers), the simplified goal of this network is to take in a board state in ``a1()`` and return a evaluation score in ``last()``:
+The neural network **f0** is parameterised by **0** and takes input the state **s** of the board. It has two outputs: a continuous value/evaluation of the board state **vθ(s)∈[−1,1]** from the prespective of the current player, and a policy **pθ(s)** that is a probability vector over all possible actions.
+
+When training the network, at the end of each game of self-play, the neural net is provided training examples of the form **(st, πt, zt)**. **πt** is an esitmate of the policy from state **st** and **zt∈{−1,1}** is the final outcome of the game from the perspective of the player at **st**.
+
+The neural net is trained to minimise the following loss function:
+
+![image](https://user-images.githubusercontent.com/62669782/236341753-92420ce8-1636-46f3-900f-0d2407d1c38e.png)
+
+
+The idea is that, over time, the network will learn what states eventually lead to wins or losses.
+
+### Architecture
 ```python
-LunaNN(
-  (a1): Conv2d(5, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (a2): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (a3): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2))
-  (b1): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (b2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (b3): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2))
-  (c1): Conv2d(64, 64, kernel_size=(2, 2), stride=(1, 1), padding=(1, 1))
-  (c2): Conv2d(64, 64, kernel_size=(2, 2), stride=(1, 1), padding=(1, 1))
-  (c3): Conv2d(64, 128, kernel_size=(2, 2), stride=(2, 2))
-  (d1): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
-  (d2): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
-  (d3): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
-  (last): Linear(in_features=128, out_features=1, bias=True)
-  (loss): MSELoss()
-)
+self.conv1 = nn.Conv3d(1, args.num_channels, 3, stride=1, padding=1)
+        
+## Hidden
+self.conv2 = nn.Conv3d(args.num_channels, args.num_channels * 2, 3, stride=1, padding=1)
+self.conv3 = nn.Conv3d(args.num_channels * 2, args.num_channels * 2, 3, stride=1)
+self.conv4 = nn.Conv3d(args.num_channels * 2, args.num_channels * 2, 3, stride=1)
+self.conv5 = nn.Conv3d(args.num_channels * 2, args.num_channels, 1, stride=1)
+
+self.bn1 = nn.BatchNorm3d(args.num_channels)
+self.bn2 = nn.BatchNorm3d(args.num_channels * 2)
+self.bn3 = nn.BatchNorm3d(args.num_channels * 2)
+self.bn4 = nn.BatchNorm3d(args.num_channels * 2)
+self.bn5 = nn.BatchNorm3d(args.num_channels)
+
+self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4)*(self.board_z-4), 1024) #4096 -> 1024
+self.fc_bn1 = nn.BatchNorm1d(1024)
+
+self.fc2 = nn.Linear(1024, 512)
+self.fc_bn2 = nn.BatchNorm1d(512)
+
+self.fc3 = nn.Linear(512, 512)
+self.fc_bn3 = nn.BatchNorm1d(512)
+
+# output p(st)
+self.fc4 = nn.Linear(512, self.action_size)
+
+# output vt
+self.fc5 = nn.Linear(512, 1)
 ```
 
-## Feature engineering
+## Monte-Carlo Tree Search for Policy Improvement
+Given a state **s**, the neural network provides an estimate of the policy **pθ**
+
+## Feature engineering(ONLY USED IN SUPERVISED LEARNING WHICH IS DEPRECATED)
 This was by far the most annoying process in the building of the neural network architecture, from the board serialization data to type of data...
 
 ### Board Serialization
@@ -64,175 +89,3 @@ While a 5M dataset in `uint8` would take around 5GiB of RAM and disk space.
 
 `float32` also brought problems such as the network not understanding the pieces bitmaps, because they were float values the network was thinking of the pieces as raw values instead of classes.
 
-## Luna vs Stockfish
-To test the efficacy of Luna's evaluation network I made a few functions to compare it against stockfish:
-
-- A
-- B
-
-Note that if you ever want to build your own Luna model and compare it to stockfish you will have to download the [stockfish binaries](https://stockfishchess.org/download/).
-
-## Self-Play
-I also implemented a feature to Luna that allows her to play with itself 
-    
-
-![image](https://user-images.githubusercontent.com/62669782/233199778-5984d311-73ae-4a27-92c3-d291fdffd3ca.png)
-
-
-## Project Architecture
-I aimed to create a deep learning model that could **easily** be used as a package, so I conceptualized this project into an object-oriented approach, making it so that by just doing this:
-```python
-import luna
-```
-You have acess to:
-- Luna neural network
-- Luna evaluation function
-- Luna custom board states
-- Luna dataset creation and handling
-- All constants used by Luna
-- Stockfish related functions
-- The actual engine logic, obviously
-
-### The architecture:
-```
-Wrapper(either html or anything else) ->
-    Luna ->
-        Luna_State ->
-        Luna_Eval ->
-            Luna_NN ->
-            Luna_dataset ->
-```
-
-## Luna Usage
-A few examples of how Luna can be used.
-```python
-# Importing
-import Luna
-
-# Initializing the engine
-luna_chess = Luna(verbose=True) # Verbose is advised since it outputs alot of info about what luna is doing(generating dataset, training, etc..) 
-```
-
-### Evaluating position
-```python
-# Initialize custom Luna board state(board with starting FEN)
-luna_state = LunaState()
-print(luna_state.board) # Cmd-Based visual representation of the chess board
-
-# Integer Evaluation of the board, based around stockfish's eval function
-evaluation = luna_chess.luna_eval(luna_state)
-print(evaluation)
-
-# If you want you can check the evaluation of random board states like such:
-for i in range(1000):
-  # Get random board
-  random_board = luna_engine.random_board(max_depth=200)
-  
-  # LunaState with that board
-  luna_state_temp = LunaState(board=random_board)
-  
-  # Evaluate random board
-  evaluation_temp = luna_chess.luna_eval(luna_state_temp)
-  print(f"{board}\nWITH EVAL:{evaluation_temp}\n")
-```
-
-### Evaluate moves
-Evaluates moves using the neural network's trained evaluation function and the alpha beta pruning search algorithm. On a board, it will give us an evaluation on how good each legal move is after `luna_constants.SEARCH_DEPTH` moves.
-
-```python
-
-# Initialize custom Luna board state(board with starting FEN)
-luna_state = LunaState()
-print(luna_state.board) # Cmd-Based visual representation of the chess board
-
-# Get the evaluation of the board after each legal_move with depth of luna_constants.SEARCH_DEPTH
-eval_move_list = luna_chess.explore_leaves(luna_state)
-
-# Sorting the list according to the current player
-moves = sorted(eval_move_list, key=lambda x: x[0], reverse=luna_state.board.turn)
-        
-# Get best move from sorted moves
-best_move = move[0][1]
-
-# Top 3 moves
-print("Calculated Top 3:")        
-for i,m in enumerate(move[0:3]):
-    print(f"  {m}")
-```
-
-## HTML Wrapper
-To test the usablity of the Luna package I made a VERY SIMPLE **HTML web server wrapper**, that just uses Luna as backend logic while HTML is used to display Luna's contents.
-
-You can check the wrapper at ``src/luna_html_wrapper.py``.
-
-You can also(on the project main folder) run the web server with:
-```makefile
-make web
-```
-
-# Usage
-```
-# install every package
-pip install -r requirements.txt
-# run web server
-make web
-```
-
-TODO
-------
-
- better serialize, even ebtter!!!
- Legal moves: The set of legal moves that are available to the player at the current board state.
-
-History of moves: A sequence of previous moves made in the game, along with their corresponding board states.
-
-Material balance: The difference in the number and value of pieces captured by each player.
-
-Positional features: Features that describe the position of each piece, such as the number of attackers and defenders for each piece, the control of key squares on the board, and pawn structure.
-
-Opening book: The history of moves can also be used to create an opening book, which is a collection of known openings and their corresponding moves. By using an opening book as a reference, the neural network can quickly identify strong opening moves and avoid making weak ones.
-
-Overall, providing the history of moves as input to a neural network-based chess engine can help the neural network to develop a more sophisticated understanding of the game and make better decisions based on a broader range of information.
-
-the player to move, castling rights, and en passant possibility.
-
-improve pgn quality
-
-Castling rights: This is a binary feature that indicates whether each player can still castle on either side of the board.
-
-En passant: This is also a binary feature that indicates whether a pawn can currently be captured en passant.
-
-Move count: This is an integer feature that keeps track of the total number of moves made in the game so far.
-
-Piece count: This is a set of integer features that indicates the number of pieces of each type that each player has left on the board.
-
-Material count: This is a set of integer features that indicates the total value of each player's pieces on the board, based on standard chess valuations.
-
-Threats: This is a set of binary features that indicates which squares on the board are currently being threatened by each player's pieces.
-
-Mobility: This is a set of integer features that indicates the number of legal moves that each player can make on their turn.
-
-
-Material count: The total value of all the pieces on the board.
-
-Piece mobility: The number of squares each piece can move to on the board.
-
-King safety: How exposed the king is to threats, such as the number of attacking pieces and the number of squares the king can move to.
-
-Pawn structure: The arrangement of the pawns on the board, including isolated pawns, doubled pawns, and pawn chains.
-
-Control of the center: The number of pieces that control the central squares of the board.
-
-Development: The number of pieces that have been moved from their starting position.
-
-Space control: The number of squares controlled by each player.
-
-Tempo: The number of moves a player has made compared to their opponent.
-
-Piece placement: The location of each piece on the board and how well it is placed for potential future moves.
-
-Threats: The number of threats each player has on the board.
-
-1. implement Luna in a webserver(such as firebase)
-2. Add a bit of randomness when it comes to computer moves
-3. combine Alpha beta pruning w, transposition tables, quiescence search, and iterative deepening 
